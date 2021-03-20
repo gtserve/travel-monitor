@@ -1,6 +1,10 @@
 # Clion Project files
 .idea
 
+# CMake files
+cmake-build-debug
+CMakeLists.txt
+
 # C object/executable files
 *.o
 *.exe
