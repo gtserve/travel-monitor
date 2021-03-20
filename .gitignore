@@ -1,0 +1,6 @@
+# Clion Project files
+.idea
+
+# C object/executable files
+*.o
+*.exe
