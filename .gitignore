@@ -1,10 +1,19 @@
-# Clion Project files
-.idea
 
-# CMake files
+# Clion Project
+.idea
 cmake-build-debug
 CMakeLists.txt
 
-# C object/executable files
+# Executables
 *.o
 *.exe
+*.out
+
+# Object
+*.o
+
+# Libraries
+*.lib
+*.a
+*.la
+*.lo
