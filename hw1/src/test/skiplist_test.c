@@ -3,7 +3,7 @@
 #include <math.h>
 #include <time.h>
 
-#include "../include/skip_list.h"
+#include "../../include/skiplist.h"
 
 #define NUMBERS 25
 #define RANGE 100

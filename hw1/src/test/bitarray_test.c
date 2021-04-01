@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "../include/bit_array.h"
+#include "../../include/bitarray.h"
 
 #define TESTS 5
 #define SIZE 10

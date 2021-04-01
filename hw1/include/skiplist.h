@@ -1,5 +1,14 @@
-#ifndef HW_SYSPRO_SKIP_LIST_H
-#define HW_SYSPRO_SKIP_LIST_H
+/* skip_list.h
+ * ----------------------------------------------------------------------------
+ * System Programming - Homework 1
+ * name:    George Tservenis
+ * email:   sdi1500164[@]di.uoa.gr
+ * date:    25-03-2021
+ * ----------------------------------------------------------------------------
+ */
+
+#ifndef HW_SYSPRO_SKIPLIST_H
+#define HW_SYSPRO_SKIPLIST_H
 
 
 /* ---------------------------- Data Types ---------------------------------- */
@@ -43,4 +52,4 @@ void skl_print(SkipList *list);
 void skl_print_level(SLNode *node, int level);
 
 
-#endif //HW_SYSPRO_SKIP_LIST_H
+#endif //HW_SYSPRO_SKIPLIST_H

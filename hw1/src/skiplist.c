@@ -10,9 +10,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <time.h>
 
-#include "../include/skip_list.h"
+#include "../include/skiplist.h"
 
 
 /* -------------------------- Basic Operations ------------------------------ */
