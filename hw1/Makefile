@@ -5,19 +5,20 @@
 # sdi1500164@di.uoa.gr
 # ----------------------------------------
 
-SOURCE = main.c
-#HEADER =
-OBJECT = main.o
-OUT    = main.exe
-CC     = gcc
-CFLAGS = -g -c -Wall -Werror
-#LIBS   =
+SRC = main.c
+#HDR =
+OBJ = main.o
+EXE = main.exe
+CC  = gcc
+CFL = -g -Wall -Werror
+#LIB   =
 
-$(OUT): $(OBJECT)
-	$(CC) -g $(OBJECT) -o $@
+build:
+	mkdir ./build
+	$(CC) $(CFL) $(SRC) -o ./build/$(EXE)
 
-main.o: main.c
-	$(CC) $(CFLAGS) main.c
+execute:
+	@ ./build/$(EXE)
 
 clean:
-	rm -f $(OUT) $(OBJECT)
+	rm -rf ./build
