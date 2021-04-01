@@ -5,7 +5,7 @@ cmake-build-debug
 CMakeLists.txt
 
 # Executables
-*.o
+./build
 *.exe
 *.out
 
