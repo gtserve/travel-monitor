@@ -172,21 +172,22 @@ void skl_delete(SkipList *list, int item) {
     printf("[SL] Couldn't find item %d for deletion!\n", item);
 }
 
-void skl_destroy(SkipList *list) {
+void skl_destroy(SkipList **list) {
     /* Deallocate used space and destroy a Skip List. */
 
-    if (!list) {
+    if (!(*list)) {
         printf("[SL] Called skl_destroy for null list.\n");
         return;
     }
 
     // Destroy all nodes using the lowest level.
-    if (list->heads[0] != NULL)
-        skl_destroy_level(list->heads[0]);
+    if ((*list)->heads[0] != NULL)
+        skl_destroy_level((*list)->heads[0]);
 
     // Destroy Skip List.
-    free(list->heads);
-    free(list);
+    free((*list)->heads);
+    free((*list));
+    *list = NULL;
 }
 
 

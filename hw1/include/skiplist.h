@@ -36,7 +36,7 @@ void skl_insert(SkipList *list, int item);
 
 void skl_delete(SkipList *list, int item);
 
-void skl_destroy(SkipList *list);
+void skl_destroy(SkipList **list);
 
 
 /* -------------------------- Auxiliary Functions --------------------------- */

@@ -5,21 +5,19 @@
 
 #include "../../include/bitarray.h"
 
-#define TESTS 5
+#define TESTS 8
 #define SIZE 10
 
 
 int main(void) {
     srand(time(0));
 
-    NUM_TYPE A[SIZE] = {0};
-    int array_size = SIZE * BIT_SIZE;
-
-
+    BAR_TYPE A[SIZE] = {0};
+    int array_size = SIZE * BAR_TYPE_BITS;
 
     int x[TESTS];
     for (int i = 0; i < TESTS; ++i) {
-        x[i] = rand() % array_size;
+        x[i] = i;
     }
 
     for (int i = 0; i < TESTS; i++) {
@@ -35,11 +33,11 @@ int main(void) {
     printf("\nBitArray:\n");
     for (int i = 0; i < array_size; ++i) {
         if (TestBit(A, i)) {
-            printf("1 ");
+            printf("(1) ");
         } else {
             printf("0 ");
         }
-        if ((i + 1) % BIT_SIZE == 0) {
+        if ((i + 1) % BAR_TYPE_BITS == 0) {
             printf("\n");
         }
     }

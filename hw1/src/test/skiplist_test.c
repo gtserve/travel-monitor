@@ -34,6 +34,6 @@ int main(void) {
     skl_print(sl);
     printf("\n");
 
-    skl_destroy(sl);
+    skl_destroy(&sl);
     return 0;
 }

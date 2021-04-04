@@ -9,24 +9,97 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
+#include <math.h>
 
 #include "../../include/bloomfilter.h"
 
+#define N 10000
+#define P 0.1
+#define LIMIT 100000
+#define QUERIES 100
 
 int main(void) {
+    srand(time(NULL));
 
-    int i = 17245;
-    int j = 93754;
+    BloomFilter *bf = blf_create(N, P);
 
-//    printf("%lu\n", hash_i((unsigned char*) &i, 0));
-//    printf("%lu\n", hash_i((unsigned char*) &i, 1));
-//    printf("%lu\n", hash_i((unsigned char*) &j, 0));
-//    printf("%lu\n", hash_i((unsigned char*) &j, 1));
+    printf("Created Bloom Filter (M=%d, K=%d).\n",
+           bf->m_bits, bf->k_hash);
 
-    for (int k = 0; k < 20; ++k) {
-        printf("%lu\n", hash_i((unsigned char*) &i, k) % 10);
+    int x[N];
+    int ba_size = ((int) ceil(((double) RAND_MAX + 1) / BAR_TYPE_BITS));
+    BAR_TYPE *ba_x = (BAR_TYPE *) malloc(sizeof(BAR_TYPE) * ba_size);
+    for (int i = 0; i < N; ++i) {
+        int r = 0;
+        while ((r = rand() % LIMIT) && TestBit(ba_x, r));
+        x[i] = r;
+        SetBit(ba_x, r);
     }
+
+    for (int i = 0; i < N; ++i) {
+        blf_add(bf, x[i]);
+    }
+
+    int y[N];
+    BAR_TYPE *ba_y = (BAR_TYPE *) malloc(sizeof(BAR_TYPE) * ba_size);
+    for (int i = 0; i < N; ++i) {
+        int r = 0;
+        while ((r = rand() % LIMIT) && TestBit(ba_y, r));
+        y[i] = r;
+        SetBit(ba_y, r);
+    }
+
+    int my = 0;
+    int fp = 0;
+    int no = 0;
+
+    int true_yes = 0;
+    for (int i = 0; i < N; ++i) {
+        for (int j = 0; j < N; ++j) {
+            if (y[j] == x[i]) {
+                true_yes++;
+                break;
+            }
+        }
+    }
+    int true_no = N - true_yes;
+
+    for (int i = 0; i < N; ++i) {
+        if (blf_query(bf, y[i])) {
+            my++;
+
+            // Search y_i in x.
+            int flag = 0;
+            for (int j = 0; j < N; ++j) {
+                if (y[i] == x[j]) {
+                    flag = 1;
+                    break;
+                }
+            }
+
+            if (flag == 0) {
+                fp++;
+            }
+
+        } else {
+            no++;
+        }
+    }
+
+    printf("TY: %d\n", true_yes);
+    printf("TN: %d\n\n", true_no);
+
+    printf("MY: %d\n", my);
+    printf("NO: %d\n", no);
+    printf("FP: %d\n\n", fp);
+
+    printf("PER: %f\n", fp / (double) my);
+
+    blf_destroy(&bf);
+
+    free(ba_x);
+    free(ba_y);
 
     return 0;
 }
-
