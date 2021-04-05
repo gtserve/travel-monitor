@@ -27,8 +27,9 @@ int main(void) {
     printf("Created Bloom Filter (M=%d, K=%d).\n",
            bf->m_bits, bf->k_hash);
 
-    int x[N];
     int ba_size = ((int) ceil(((double) RAND_MAX + 1) / BAR_TYPE_BITS));
+
+    int x[N];
     BAR_TYPE *ba_x = (BAR_TYPE *) malloc(sizeof(BAR_TYPE) * ba_size);
     for (int i = 0; i < N; ++i) {
         int r = 0;
@@ -57,7 +58,7 @@ int main(void) {
     int true_yes = 0;
     for (int i = 0; i < N; ++i) {
         for (int j = 0; j < N; ++j) {
-            if (y[j] == x[i]) {
+            if (y[i] == x[j]) {
                 true_yes++;
                 break;
             }

@@ -12,8 +12,6 @@
 
 #include "bitarray.h"
 
-#define BF_hash(x, k) (hash_i(x, k) % filter->m_bits)
-
 
 /* ---------------------------- Data Types ---------------------------------- */
 
