@@ -1,17 +1,17 @@
 # Makefile
-# ----------------------------------------
+# -----------------------------------------------------------------------------
 # System Programming - Homework 1
 # George Tservenis
 # sdi1500164@di.uoa.gr
-# ----------------------------------------
+# -----------------------------------------------------------------------------
 
-SRC = main.c
+SRC = src/main.c
 #HDR =
 OBJ = main.o
-EXE = main.exe
+EXE = vaccineMonitor
 CC  = gcc
 CFL = -g -Wall -Werror
-#LIB   =
+#LIB   = -lm -lcrypto
 
 build:
 	mkdir ./build
