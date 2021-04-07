@@ -1,12 +1,12 @@
 Dengue
 Ebola
 H1N1
-Hepatitis A
-Hepatitis B
-Hepatitis E
-Human Papillomavirus
+Hepatitis_A
+Hepatitis_B
+Hepatitis_E
+Human_Papillomavirus
 Influenza
-Japanese Encephalitis
+Japanese_Encephalitis
 Junin
 Measles
 Mumps
@@ -14,7 +14,7 @@ Polio
 Rabies
 Rotavirus
 Rubella
-Tick-borne Encephalitis
-Varicella zoster
+Tick_borne_Encephalitis
+Varicella_zoster
 Variolla
-Yellow Fever
+Yellow_Fever

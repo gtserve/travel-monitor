@@ -3,13 +3,13 @@ Albania
 Algeria
 Andorra
 Angola
-Antigua and Barbuda
+Antigua_and_Barbuda
 Argentina
 Armenia
 Australia
 Austria
 Azerbaijan
-The Bahamas
+The_Bahamas
 Bahrain
 Bangladesh
 Barbados
@@ -19,40 +19,40 @@ Belize
 Benin
 Bhutan
 Bolivia
-Bosnia and Herzegovina
+Bosnia_and_Herzegovina
 Botswana
 Brazil
 Brunei
 Bulgaria
-Burkina Faso
+Burkina_Faso
 Burundi
 Cambodia
 Cameroon
 Canada
-Cape Verde
-Central African Republic
+Cape_Verde
+Central_African_Republic
 Chad
 Chile
 China
 Colombia
 Comoros
-Congo, Republic of the
-Congo, Democratic Republic of the
-Costa Rica
-Cote d'Ivoire
+Republic_of_the_Congo
+Democratic_Republic_of_the_Congo
+Costa_Rica
+Cote_d'Ivoire
 Croatia
 Cuba
 Cyprus
-Czech Republic
+Czech_Republic
 Denmark
 Djibouti
 Dominica
-Dominican Republic
-East Timor (Timor-Leste)
+Dominican_Republic
+East_Timor
 Ecuador
 Egypt
-El Salvador
-Equatorial Guinea
+El_Salvador
+Equatorial_Guinea
 Eritrea
 Estonia
 Ethiopia
@@ -60,7 +60,7 @@ Fiji
 Finland
 France
 Gabon
-The Gambia
+The_Gambia
 Georgia
 Germany
 Ghana
@@ -68,7 +68,7 @@ Greece
 Grenada
 Guatemala
 Guinea
-Guinea-Bissau
+Guinea_Bissau
 Guyana
 Haiti
 Honduras
@@ -87,8 +87,8 @@ Jordan
 Kazakhstan
 Kenya
 Kiribati
-Korea, North
-Korea, South
+North_Korea
+South_Korea
 Kosovo
 Kuwait
 Kyrgyzstan
@@ -108,23 +108,23 @@ Malaysia
 Maldives
 Mali
 Malta
-Marshall Islands
+Marshall_Islands
 Mauritania
 Mauritius
 Mexico
-Micronesia, Federated States of
+Federated_States_of_Micronesia
 Moldova
 Monaco
 Mongolia
 Montenegro
 Morocco
 Mozambique
-Myanmar (Burma)
+Myanmar
 Namibia
 Nauru
 Nepal
 Netherlands
-New Zealand
+New_Zealand
 Nicaragua
 Niger
 Nigeria
@@ -133,7 +133,7 @@ Oman
 Pakistan
 Palau
 Panama
-Papua New Guinea
+Papua_New_Guinea
 Paraguay
 Peru
 Philippines
@@ -143,26 +143,26 @@ Qatar
 Romania
 Russia
 Rwanda
-Saint Kitts and Nevis
-Saint Lucia
-Saint Vincent and the Grenadines
+Saint_Kitts_and_Nevis
+Saint_Lucia
+Saint_Vincent_and_the_Grenadines
 Samoa
-San Marino
-Sao Tome and Principe
-Saudi Arabia
+San_Marino
+Sao_Tome_and_Principe
+Saudi_Arabia
 Senegal
 Serbia
 Seychelles
-Sierra Leone
+Sierra_Leone
 Singapore
 Slovakia
 Slovenia
-Solomon Islands
+Solomon_Islands
 Somalia
-South Africa
-South Sudan
+South_Africa
+South_Sudan
 Spain
-Sri Lanka
+Sri_Lanka
 Sudan
 Suriname
 Swaziland
@@ -175,20 +175,20 @@ Tanzania
 Thailand
 Togo
 Tonga
-Trinidad and Tobago
+Trinidad_and_Tobago
 Tunisia
 Turkey
 Turkmenistan
 Tuvalu
 Uganda
 Ukraine
-United Arab Emirates
-United Kingdom
-United States of America
+United_Arab_Emirates
+United_Kingdom
+United_States_of_America
 Uruguay
 Uzbekistan
 Vanuatu
-Vatican City
+Vatican_City
 Venezuela
 Vietnam
 Yemen
