@@ -30,10 +30,7 @@ BloomFilter *blf_create(unsigned int n, double p) {
 
     // Create and initialize bit array.
     int size = (int) ceil(filter->m_bits / (double) BAR_TYPE_BITS);
-    filter->array = (BAR_TYPE *) malloc(sizeof(BAR_TYPE) * size);
-    for (int i = 0; i < size; ++i) {
-        filter->array[i] = 0;
-    }
+    filter->array = (BAR_TYPE *) calloc(size, sizeof(BAR_TYPE));
 
     return filter;
 }
