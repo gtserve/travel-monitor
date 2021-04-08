@@ -36,60 +36,60 @@ void usage(char *prog_name);
 
 int main(int argc, char **argv) {
 
-//    OptionsType options = {0, 0, NULL, NULL};
-//
-//    opterr = 0;
-//
-//    int c;
-//    while ((c = getopt(argc, argv, "c:b:")) != EOF) {
-//        switch (c) {
-//            case 'c':
-//                options.c_flag = 1;
-//                options.c_value = optarg;
-//                if (!(fopen(optarg, "r"))) {
-//                    fprintf(stderr, ERR_FOPEN, optarg);
-//                    exit(EXIT_FAILURE);
-//                }
-//                break;
-//            case 'b':
-//                options.b_flag = 1;
-//                options.b_value = optarg;
-//                break;
-//            case '?':
-//                if ((optopt == 'c') || (optopt == 'b')) {
-//                    fprintf(stderr,"Option -%c requires an argument.\n", optopt);
-//                } else if (isprint(optopt)) {
-//                    fprintf(stderr, "Unknown option '-%c'.\n", optopt);
-//                } else {
-//                    fprintf(stderr,"Unknown option character '\\x%x'.\n", optopt);
-//                }
-//                usage(argv[0]);
-//                break;
-//            default:
-//                exit(EXIT_FAILURE);
-//        }
-//    }
-//
-//    printf("c: %d, %s\n", options.c_flag, options.c_value);
-//    printf("b: %d, %s\n", options.b_flag, options.b_value);
-//
-//    for (int i = optind; i < argc; i++) {
-//        printf("Non option argument %s.\n", argv[i]);
-//    }
+    OptionsType options = {0, 0, NULL, NULL};
 
-//    char cmd_str[50] = {""};
-//    char cmd_args[150] = {""};
-//
-//    int num_args = 0;
-//
-//    while (strcmp(cmd_str, "exit") != 0) {
-//
-//        num_args = scanf("/%s", cmd_str);
-//
-//        printf("matches  = %d\n", num_args);
-//        printf("CMD_STR  = %s\n", cmd_str);
-//        printf("CMD_ARGS = %s\n", cmd_args);
-//    }
+    opterr = 0;
+
+    int c;
+    while ((c = getopt(argc, argv, "c:b:")) != EOF) {
+        switch (c) {
+            case 'c':
+                options.c_flag = 1;
+                options.c_value = optarg;
+                if (!(fopen(optarg, "r"))) {
+                    fprintf(stderr, ERR_FOPEN, optarg);
+                    exit(EXIT_FAILURE);
+                }
+                break;
+            case 'b':
+                options.b_flag = 1;
+                options.b_value = optarg;
+                break;
+            case '?':
+                if ((optopt == 'c') || (optopt == 'b')) {
+                    fprintf(stderr,"Error: Option -%c requires an argument.\n", optopt);
+                } else if (isprint(optopt)) {
+                    fprintf(stderr, "Error: Unknown option '-%c'.\n", optopt);
+                } else {
+                    fprintf(stderr,"Error: Unknown option character '\\x%x'.\n", optopt);
+                }
+                usage(argv[0]);
+                break;
+            default:
+                exit(EXIT_FAILURE);
+        }
+    }
+
+    printf("c: %d, %s\n", options.c_flag, options.c_value);
+    printf("b: %d, %s\n", options.b_flag, options.b_value);
+
+    for (int i = optind; i < argc; i++) {
+        printf("Non option argument %s.\n", argv[i]);
+    }
+
+    char cmd_str[50] = {""};
+    char cmd_args[150] = {""};
+
+    int num_args = 0;
+
+    while (strcmp(cmd_str, "exit") != 0) {
+
+        num_args = scanf("/%s", cmd_str);
+
+        printf("matches  = %d\n", num_args);
+        printf("CMD_STR  = %s\n", cmd_str);
+        printf("CMD_ARGS = %s\n", cmd_args);
+    }
 
     size_t buffer_size = 150;
     char *buffer = (char *) malloc(sizeof(char) * buffer_size);
