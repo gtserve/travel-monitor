@@ -16,3 +16,6 @@ CMakeLists.txt
 *.a
 *.la
 *.lo
+
+# Test Files
+input.txt
