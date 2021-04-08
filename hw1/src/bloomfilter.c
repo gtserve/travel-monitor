@@ -25,8 +25,8 @@ BloomFilter *blf_create(unsigned int n, double p) {
     BloomFilter *filter = (BloomFilter *) malloc(sizeof(BloomFilter));
 
     // Calculate the required m bits and k hash functions.
-    filter->m_bits = (int) ceil(-(n * log(p)) / (pow(log(2), 2)));
-    filter->k_hash = (int) ceil(-log2(p));
+    filter->m_bits = (int) (ceil(-(n * log(p)) / (pow(log(2), 2))));
+    filter->k_hash = (int) round(-log2(p));
 
     // Create and initialize bit array.
     int size = (int) ceil(filter->m_bits / (double) BAR_TYPE_BITS);
@@ -64,27 +64,6 @@ unsigned long hash_i(unsigned int x, unsigned int i) {
      * also as a wrapper and support integers. */
 
     return (djb2((unsigned char *) &x) + i * sdbm((unsigned char *) &x) + i * i);
-
-//    unsigned char hash[SHA256_DIGEST_LENGTH];
-//    SHA256_CTX sha256;
-//    SHA256_Init(&sha256);
-//    SHA256_Update(&sha256, (unsigned char *) &x, sizeof(int));
-//    SHA256_Final(hash, &sha256);
-//
-//    unsigned char hash2[SHA256_DIGEST_LENGTH];
-//    SHA256_CTX sha256_2;
-//    SHA256_Init(&sha256_2);
-//    SHA256_Update(&sha256_2, (unsigned char *) &i, sizeof(int));
-//    SHA256_Final(hash2, &sha256_2);
-//
-//    unsigned long result = 0;
-//    unsigned long *h1 = (unsigned long *) hash;
-//    unsigned long *h2 = (unsigned long *) hash2;
-//    for (int j = 0; j < 4; ++j) {
-//        result += h1[j] + h2[j];
-//    }
-//
-//    return result;
 }
 
 unsigned long djb2(unsigned char *str) {

@@ -15,12 +15,12 @@
 #include "../../include/bloomfilter.h"
 
 #define N 10000
-#define P 0.1
+#define P 0.01
 #define LIMIT 100000
 #define QUERIES 100
 
 int main(void) {
-    srand(time(NULL));
+    srand(time(0));
 
     BloomFilter *bf = blf_create(N, P);
 
@@ -30,7 +30,7 @@ int main(void) {
     int ba_size = ((int) ceil(((double) RAND_MAX + 1) / BAR_TYPE_BITS));
 
     int x[N];
-    BAR_TYPE *ba_x = (BAR_TYPE *) malloc(sizeof(BAR_TYPE) * ba_size);
+    BAR_TYPE *ba_x = (BAR_TYPE *) calloc(ba_size, sizeof(BAR_TYPE));
     for (int i = 0; i < N; ++i) {
         int r = 0;
         while ((r = rand() % LIMIT) && TestBit(ba_x, r));
@@ -43,7 +43,7 @@ int main(void) {
     }
 
     int y[N];
-    BAR_TYPE *ba_y = (BAR_TYPE *) malloc(sizeof(BAR_TYPE) * ba_size);
+    BAR_TYPE *ba_y = (BAR_TYPE *) calloc(ba_size, sizeof(BAR_TYPE));
     for (int i = 0; i < N; ++i) {
         int r = 0;
         while ((r = rand() % LIMIT) && TestBit(ba_y, r));
@@ -95,7 +95,7 @@ int main(void) {
     printf("NO: %d\n", no);
     printf("FP: %d\n\n", fp);
 
-    printf("PER: %f\n", fp / (double) my);
+    printf("FP RATE: %f\n", fp / (double) (fp + true_no));
 
     blf_destroy(&bf);
 
