@@ -1,7 +1,6 @@
 # Clion Project
 .idea
 cmake-build-debug
-CMakeLists.txt
 
 # Executables
 ./build
