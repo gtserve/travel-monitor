@@ -12,6 +12,8 @@ add_executable(
         include/bloomfilter.h
         include/skiplist.h
         include/bitarray.h
+        src/hashtable.c
+        src/hashtable.h
 )
 
 add_executable(

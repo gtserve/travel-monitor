@@ -28,7 +28,7 @@ int main(void) {
 
     for (int i = 0; i < NUMBERS / 4; i++) {
         int j = rand() % NUMBERS;
-        printf("Deleting item [%d].\n", x[j]);
+        printf("Deleting key [%d].\n", x[j]);
         skl_delete(sl, x[j]);
     }
     skl_print(sl);

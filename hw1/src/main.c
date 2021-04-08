@@ -16,7 +16,7 @@
 #include "../include/util.h"
 
 #define PROG_NAME "vaccineMonitor"
-#define ERR_FOPEN "Error: Couldn't open file '%s'."
+#define ERR_FOPEN "Error: Couldn't open file '%s'.\n"
 #define USAGE_STR "Program Usage:\n" \
                   "%s [-c citizenRecordsFile] [-b bloomSize]\n"
 
@@ -46,8 +46,8 @@ int main(int argc, char **argv) {
             case 'c':
                 options.c_flag = 1;
                 options.c_value = optarg;
-                if (!(fopen(optarg, "r"))) {
-                    fprintf(stderr, ERR_FOPEN, optarg);
+                if (!(fopen(options.c_value, "r"))) {
+                    fprintf(stderr, ERR_FOPEN, options.c_value);
                     exit(EXIT_FAILURE);
                 }
                 break;
@@ -70,35 +70,19 @@ int main(int argc, char **argv) {
         }
     }
 
+//    for (int i = optind; i < argc; i++) {
+//        printf("Non option argument %s.\n", argv[i]);
+//    }
+
     printf("c: %d, %s\n", options.c_flag, options.c_value);
     printf("b: %d, %s\n", options.b_flag, options.b_value);
 
-    for (int i = optind; i < argc; i++) {
-        printf("Non option argument %s.\n", argv[i]);
-    }
+    GeneralData data = {0};
+    data.bloom_size = strtol(options.b_value, NULL, 10);
+    data.exp_records = 10000;
 
-    char cmd_str[50] = {""};
-    char cmd_args[150] = {""};
+    record_parser(options.c_value, &data);
 
-    int num_args = 0;
-
-    while (strcmp(cmd_str, "exit") != 0) {
-
-        num_args = scanf("/%s", cmd_str);
-
-        printf("matches  = %d\n", num_args);
-        printf("CMD_STR  = %s\n", cmd_str);
-        printf("CMD_ARGS = %s\n", cmd_args);
-    }
-
-    size_t buffer_size = 150;
-    char *buffer = (char *) malloc(sizeof(char) * buffer_size);
-
-    while (getline(&buffer, &buffer_size, stdin) != -1) {
-        if (input_handler(buffer) == -1) {
-            break;
-        }
-    }
 
     return 0;
 }

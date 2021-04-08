@@ -29,8 +29,8 @@ SkipList *skl_create() {
     return list;
 }
 
-SLNode *skl_search(SkipList *list, int item) {
-    /* Search for an item in a Skip List. If item is found return its node or
+CitizenType *skl_search(SkipList *list, int key) {
+    /* Search for an key in a Skip List. If key is found return its node or
      * else NULL. */
 
     if (!list) {
@@ -40,26 +40,26 @@ SLNode *skl_search(SkipList *list, int item) {
 
     // Simple checks that can be done quickly.
     if (list->heads[0] != NULL) {
-        if (item < list->heads[0]->item) {
+        if (key < list->heads[0]->key) {
             return NULL;
-        } else if (item == list->heads[0]->item) {
-            return list->heads[0];
+        } else if (key == list->heads[0]->key) {
+            return list->heads[0]->citizen;
         }
     }
     if (list->tail != NULL) {
-        if (item > list->tail->item) {
+        if (key > list->tail->key) {
             return NULL;
-        } else if (item == list->heads[0]->item) {
-            return list->heads[0];
+        } else if (key == list->heads[0]->key) {
+            return list->heads[0]->citizen;
         }
     }
 
     if (list->nodes > 2) {
         SLNode **next = list->heads;
         for (int l = list->levels - 1; l >= 0; l--) {
-            while ((next[l] != NULL) && (next[l]->item <= item)) {
-                if (next[l]->item == item) {
-                    return next[l];
+            while ((next[l] != NULL) && (next[l]->key <= key)) {
+                if (next[l]->key == key) {
+                    return next[l]->citizen;
                 }
                 next = next[l]->next;
             }
@@ -69,8 +69,8 @@ SLNode *skl_search(SkipList *list, int item) {
     return NULL;
 }
 
-void skl_insert(SkipList *list, int item) {
-    /* Insert a new item in the Skip List (duplicates not allowed). */
+void skl_insert(SkipList *list, CitizenType *item) {
+    /* Insert a new key in the Skip List (duplicates not allowed). */
 
     if (!list) {
         printf("[SL] Called skl_insert for null list.\n");
@@ -95,10 +95,10 @@ void skl_insert(SkipList *list, int item) {
     SLNode *current = NULL;
     SLNode **next = list->heads;
     for (int l = list->levels - 1; l >= 0; l--) {
-        while ((next[l] != NULL) && (next[l]->item <= item)) {
-            if (next[l]->item == item) {
+        while ((next[l] != NULL) && (next[l]->key <= item->id)) {
+            if (next[l]->key == item->id) {
                 // No duplicates allowed!
-                printf("[SL] Item %d is already inserted!\n", item);
+                printf("[SL] Item %d is already inserted!\n", item->id);
                 return;
             }
             current = next[l];
@@ -109,7 +109,8 @@ void skl_insert(SkipList *list, int item) {
 
     // Create and initialize a new node.
     SLNode *new_node = (SLNode *) malloc(sizeof(SLNode));
-    new_node->item = item;
+    new_node->key = item->id;
+    new_node->citizen = item;
     new_node->next = (SLNode **) malloc(sizeof(SLNode *) * new_node_lvls);
     new_node->next[0] = NULL;
 
@@ -127,8 +128,8 @@ void skl_insert(SkipList *list, int item) {
     list->nodes++;
 }
 
-void skl_delete(SkipList *list, int item) {
-    /* Delete an item from the Skip List. */
+void skl_delete(SkipList *list, int key) {
+    /* Delete an key from the Skip List. */
 
     if (!list) {
         printf("[SL] Called skl_delete for null list.\n");
@@ -140,7 +141,7 @@ void skl_delete(SkipList *list, int item) {
     SLNode *current = NULL;
     SLNode **next = list->heads;
     for (int l = list->levels - 1; l >= 0; l--) {
-        while ((next[l] != NULL) && (next[l]->item < item)) {
+        while ((next[l] != NULL) && (next[l]->key < key)) {
             current = next[l];
             next = current->next;
         }
@@ -148,9 +149,9 @@ void skl_delete(SkipList *list, int item) {
     }
 
     SLNode *target = NULL;
-    if ((prev[0] == NULL) && (list->heads[0]->item == item)) {
+    if ((prev[0] == NULL) && (list->heads[0]->key == key)) {
         target = list->heads[0];
-    } else if ((prev[0] != NULL) && (prev[0]->next[0]->item == item)) {
+    } else if ((prev[0] != NULL) && (prev[0]->next[0]->key == key)) {
         target = prev[0]->next[0];
     }
 
@@ -169,7 +170,7 @@ void skl_delete(SkipList *list, int item) {
         return;
     }
 
-    printf("[SL] Couldn't find item %d for deletion!\n", item);
+    printf("[SL] Couldn't find key %d for deletion!\n", key);
 }
 
 void skl_destroy(SkipList **list) {
@@ -250,7 +251,7 @@ void skl_print_level(SLNode *node, int level) {
         return;
     }
 
-    printf("[%d] -> ", node->item);
+    printf("[%d] -> ", node->key);
     if (node->next[level] != NULL) {
         skl_print_level(node->next[level], level);
     } else {
