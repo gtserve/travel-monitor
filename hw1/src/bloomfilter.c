@@ -18,15 +18,19 @@
 
 /* -------------------------- Basic Operations ------------------------------ */
 
-BloomFilter *blf_create(unsigned int n, double p) {
+BloomFilter *blf_create(unsigned int n, unsigned int m) {
     /* Create a Bloom Filter given the (n) estimated elements to be inserted and
      * (p) the desired probability of false positives. */
 
     BloomFilter *filter = (BloomFilter *) malloc(sizeof(BloomFilter));
 
     // Calculate the required m bits and k hash functions.
-    filter->m_bits = (int) (ceil(-(n * log(p)) / (pow(log(2), 2))));
-    filter->k_hash = (int) round(-log2(p));
+    filter->m_bits = m;
+    filter->k_hash = (int) round((m /(double ) n) * log(2));
+
+
+//    filter->m_bits = (int) (ceil(-(n * log(p)) / (pow(log(2), 2))));
+//    filter->k_hash = (int) round(-log2(p));
 
     // Create and initialize bit array.
     int size = (int) ceil(filter->m_bits / (double) BAR_TYPE_BITS);

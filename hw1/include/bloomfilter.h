@@ -16,14 +16,14 @@
 /* ---------------------------- Data Types ---------------------------------- */
 
 typedef struct {
-    int m_bits;         // Number of bits in bit array.
-    int k_hash;         // Number of hash functions.
+    unsigned int m_bits;         // Number of bits in bit array.
+    unsigned int k_hash;         // Number of hash functions.
     BAR_TYPE *array;    // Bit array.
 } BloomFilter;
 
 /* -------------------------- Basic Operations ------------------------------ */
 
-BloomFilter *blf_create(unsigned int n, double p);
+BloomFilter *blf_create(unsigned int n, unsigned int m);
 
 void blf_add(BloomFilter *filter, int x);
 
