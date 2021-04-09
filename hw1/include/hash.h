@@ -11,11 +11,11 @@
 #define SYSPRO_HW1_HASH_H
 
 
-unsigned long hash_i(unsigned char *str, unsigned int i);
+unsigned long hash_i(unsigned int i, unsigned char *key, short key_size);
 
-unsigned long djb2(unsigned char *str);
+unsigned long djb2(unsigned char *key, short key_size);
 
-unsigned long sdbm(unsigned char *str);
+unsigned long sdbm(unsigned char *key, short key_size);
 
 
 #endif //SYSPRO_HW1_HASH_H

@@ -29,9 +29,8 @@ BloomFilter *blf_create(unsigned int n, unsigned int m) {
     filter->m_bits = m;
     filter->k_hash = (int) round((m /(double ) n) * log(2));
 
-
-//    filter->m_bits = (int) (ceil(-(n * log(p)) / (pow(log(2), 2))));
-//    filter->k_hash = (int) round(-log2(p));
+//    filter->m_bits = (int) (ceil(-(n * log(m)) / (pow(log(2), 2))));
+//    filter->k_hash = (int) round(-log2(m));
 
     // Create and initialize bit array.
     int size = (int) ceil(filter->m_bits / (double) BAR_TYPE_BITS);
@@ -43,7 +42,7 @@ BloomFilter *blf_create(unsigned int n, unsigned int m) {
 void blf_add(BloomFilter *filter, int x) {
     for (int k = 0; k < filter->k_hash; ++k) {
         SetBit(filter->array,
-               (hash_i((unsigned char *) &x, k) % filter->m_bits));
+               (hash_i(k, (unsigned char *) &x, sizeof(int)) % filter->m_bits));
     }
 }
 
@@ -51,7 +50,7 @@ int blf_query(BloomFilter *filter, int x) {
     int k = 0;
     while ((k < filter->k_hash) &&
            (TestBit(filter->array,
-                    (hash_i((unsigned char *) &x, k) % filter->m_bits)))) {
+                    (hash_i(k, (unsigned char *) &x, sizeof(int)) % filter->m_bits)))) {
         k++;
     }
     return ((k < filter->k_hash) ? 0 : 1);

@@ -7,28 +7,28 @@
  * ----------------------------------------------------------------------------
  */
 
+#include <stdio.h>
 #include "../include/hash.h"
 
 
-unsigned long hash_i(unsigned char *str, unsigned int i) {
-    return (djb2(str) + i * sdbm(str) + i * i);
+unsigned long hash_i(unsigned int i, unsigned char *key, short key_size) {
+    return (djb2(key, key_size) + i * sdbm(key, key_size) + i * i);
 }
 
-unsigned long djb2(unsigned char *str) {
+unsigned long djb2(unsigned char *key, short key_size) {
     unsigned long hash = 5381;
-    int c;
-    while ((c = *str++)) {
-        hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+    while (key_size) {
+        hash = ((hash << 5) + hash) + (*(key++)); /* hash * 33 + c */
+        key_size--;
     }
     return hash;
 }
 
-unsigned long sdbm(unsigned char *str) {
+unsigned long sdbm(unsigned char *key, short key_size) {
     unsigned long hash = 0;
-    int c;
-
-    while ((c = *str++)) {
-        hash = c + (hash << 6) + (hash << 16) - hash;
+    while (key_size) {
+        hash = (*key++) + (hash << 6) + (hash << 16) - hash;
+        key_size--;
     }
 
     return hash;

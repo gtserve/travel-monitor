@@ -15,7 +15,7 @@
 #include "../../include/bloomfilter.h"
 
 #define N 10000
-#define P 0.01
+#define P 0.6
 #define LIMIT 100000
 #define QUERIES 100
 
