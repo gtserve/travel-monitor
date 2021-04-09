@@ -2,6 +2,9 @@
 .idea
 cmake-build-debug
 
+# Build Dir
+build
+
 # Executables
 ./build
 *.exe
