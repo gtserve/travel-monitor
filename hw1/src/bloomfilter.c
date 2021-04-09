@@ -13,6 +13,7 @@
 #include <openssl/md5.h>
 #include <openssl/sha.h>
 
+#include "../include/hash.h"
 #include "../include/bloomfilter.h"
 
 
@@ -58,34 +59,4 @@ void blf_destroy(BloomFilter **filter) {
     free((*filter)->array);
     free((*filter));
     *filter = NULL;
-}
-
-
-/* --------------------------- Hash Functions ------------------------------- */
-
-unsigned long hash_i(unsigned int x, unsigned int i) {
-    /* Only this one was changed from the original file h39jdk2.c to function
-     * also as a wrapper and support integers. */
-
-    return (djb2((unsigned char *) &x) + i * sdbm((unsigned char *) &x) + i * i);
-}
-
-unsigned long djb2(unsigned char *str) {
-    unsigned long hash = 5381;
-    int c;
-    while ((c = *str++)) {
-        hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
-    }
-    return hash;
-}
-
-unsigned long sdbm(unsigned char *str) {
-    unsigned long hash = 0;
-    int c;
-
-    while ((c = *str++)) {
-        hash = c + (hash << 6) + (hash << 16) - hash;
-    }
-
-    return hash;
 }

@@ -32,13 +32,4 @@ int blf_query(BloomFilter *filter, int x);
 void blf_destroy(BloomFilter **filter);
 
 
-/* --------------------------- Hash Functions ------------------------------- */
-
-unsigned long hash_i(unsigned int x, unsigned int i);
-
-unsigned long djb2(unsigned char *str);
-
-unsigned long sdbm(unsigned char *str);
-
-
 #endif //HW_SYSPRO_BLOOMFILTER_H
