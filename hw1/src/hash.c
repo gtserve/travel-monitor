@@ -10,11 +10,8 @@
 #include "../include/hash.h"
 
 
-unsigned long hash_i(unsigned int x, unsigned int i) {
-    /* Only this one was changed from the original file h39jdk2.c to function
-     * also as a wrapper and support integers. */
-
-    return (djb2((unsigned char *) &x) + i * sdbm((unsigned char *) &x) + i * i);
+unsigned long hash_i(unsigned char *str, unsigned int i) {
+    return (djb2(str) + i * sdbm(str) + i * i);
 }
 
 unsigned long djb2(unsigned char *str) {

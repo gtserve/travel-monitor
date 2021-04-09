@@ -42,14 +42,16 @@ BloomFilter *blf_create(unsigned int n, unsigned int m) {
 
 void blf_add(BloomFilter *filter, int x) {
     for (int k = 0; k < filter->k_hash; ++k) {
-        SetBit(filter->array, (hash_i(x, k) % filter->m_bits));
+        SetBit(filter->array,
+               (hash_i((unsigned char *) &x, k) % filter->m_bits));
     }
 }
 
 int blf_query(BloomFilter *filter, int x) {
     int k = 0;
     while ((k < filter->k_hash) &&
-           (TestBit(filter->array, (hash_i(x, k) % filter->m_bits)))) {
+           (TestBit(filter->array,
+                    (hash_i((unsigned char *) &x, k) % filter->m_bits)))) {
         k++;
     }
     return ((k < filter->k_hash) ? 0 : 1);

@@ -11,7 +11,7 @@
 #define SYSPRO_HW1_HASH_H
 
 
-unsigned long hash_i(unsigned int x, unsigned int i);
+unsigned long hash_i(unsigned char *str, unsigned int i);
 
 unsigned long djb2(unsigned char *str);
 
