@@ -10,18 +10,7 @@
 #ifndef HW_SYSPRO_SKIPLIST_H
 #define HW_SYSPRO_SKIPLIST_H
 
-typedef struct {
-    char *name;
-    int population;
-} CountryType;
-
-typedef struct {
-    int id;
-    char *firstName;
-    char *lastName;
-    CountryType *country;
-    int age;
-} CitizenType;
+#include "types.h"
 
 /* ---------------------------- Data Types ---------------------------------- */
 
@@ -49,20 +38,9 @@ void skl_insert(SkipList *list, CitizenType *item);
 
 void skl_delete(SkipList *list, int key);
 
-void skl_destroy(SkipList **list);
-
-
-/* -------------------------- Auxiliary Functions --------------------------- */
-
-int skl_flip_coin();
-
-int skl_get_levels(int nodes);
-
-void skl_destroy_level(SLNode *node);
-
 void skl_print(SkipList *list);
 
-void skl_print_level(SLNode *node, int level);
+void skl_destroy(SkipList **list);
 
 
 #endif //HW_SYSPRO_SKIPLIST_H

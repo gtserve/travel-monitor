@@ -14,6 +14,54 @@
 #include "../include/skiplist.h"
 
 
+/* -------------------------- Auxiliary Functions --------------------------- */
+
+int skl_flip_coin() {
+    return (rand() % 2);
+}
+
+int skl_get_levels(int nodes) {
+    int num_levels = 1;                         // Minimum
+    int max = (int) log2(nodes) + 1;
+    while ((num_levels < max) && (skl_flip_coin() == 1)) {
+        num_levels++;
+    }
+    return num_levels;
+}
+
+void skl_destroy_level(SLNode *node) {
+    /* Destroy a simple Linked List of nodes recursively. */
+
+    if (!node) {
+        printf("[SL] Called skl_destroy_level for null node.\n");
+        return;
+    }
+
+    if (node->next[0] != NULL)
+        skl_destroy_level(node->next[0]);
+
+    // Destroy node.
+    free(node->next);
+    free(node);
+}
+
+void skl_print_level(SLNode *node, int level) {
+    /* Print a simple Linked List of nodes recursively. */
+
+    if (!node) {
+        printf("[SL] Called skl_print_level for null node.\n");
+        return;
+    }
+
+    printf("[%d] -> ", node->key);
+    if (node->next[level] != NULL) {
+        skl_print_level(node->next[level], level);
+    } else {
+        printf("[NULL]\n");
+    }
+}
+
+
 /* -------------------------- Basic Operations ------------------------------ */
 
 SkipList *skl_create() {
@@ -173,57 +221,6 @@ void skl_delete(SkipList *list, int key) {
     printf("[SL] Couldn't find key %d for deletion!\n", key);
 }
 
-void skl_destroy(SkipList **list) {
-    /* Deallocate used space and destroy a Skip List. */
-
-    if (!(*list)) {
-        printf("[SL] Called skl_destroy for null list.\n");
-        return;
-    }
-
-    // Destroy all nodes using the lowest level.
-    if ((*list)->heads[0] != NULL)
-        skl_destroy_level((*list)->heads[0]);
-
-    // Destroy Skip List.
-    free((*list)->heads);
-    free((*list));
-    *list = NULL;
-}
-
-
-/* -------------------------- Auxiliary Functions --------------------------- */
-
-int skl_flip_coin() {
-    return (rand() % 2);
-}
-
-int skl_get_levels(int nodes) {
-    int num_levels = 1;                         // Minimum
-    int max = (int) log2(nodes) + 1;
-    while ((num_levels < max) && (skl_flip_coin() == 1)) {
-        num_levels++;
-    }
-    return num_levels;
-}
-
-void skl_destroy_level(SLNode *node) {
-    /* Destroy a simple Linked List of nodes recursively. */
-
-    if (!node) {
-        printf("[SL] Called skl_destroy_level for null node.\n");
-        return;
-    }
-
-    if (node->next[0] != NULL)
-        skl_destroy_level(node->next[0]);
-
-    // Destroy node.
-    free(node->next);
-    free(node);
-}
-
-
 void skl_print(SkipList *list) {
     /* Print a whole Skip List. */
 
@@ -243,18 +240,20 @@ void skl_print(SkipList *list) {
     }
 }
 
-void skl_print_level(SLNode *node, int level) {
-    /* Print a simple Linked List of nodes recursively. */
+void skl_destroy(SkipList **list) {
+    /* Deallocate used space and destroy a Skip List. */
 
-    if (!node) {
-        printf("[SL] Called skl_print_level for null node.\n");
+    if (!(*list)) {
+        printf("[SL] Called skl_destroy for null list.\n");
         return;
     }
 
-    printf("[%d] -> ", node->key);
-    if (node->next[level] != NULL) {
-        skl_print_level(node->next[level], level);
-    } else {
-        printf("[NULL]\n");
-    }
+    // Destroy all nodes using the lowest level.
+    if ((*list)->heads[0] != NULL)
+        skl_destroy_level((*list)->heads[0]);
+
+    // Destroy Skip List.
+    free((*list)->heads);
+    free((*list));
+    *list = NULL;
 }
