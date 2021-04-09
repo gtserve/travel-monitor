@@ -6,15 +6,19 @@ add_executable(
         vaccine_monitor
         src/main.c
         src/util.c
+        src/data.c
+        src/hashtable.c
         src/bloomfilter.c
         src/skiplist.c
+        src/hash.c
         include/util.h
         include/bloomfilter.h
         include/skiplist.h
         include/bitarray.h
-        src/hashtable.c
-        src/hashtable.h
-)
+        include/hashtable.h
+        include/data.h
+        include/hash.h
+        include/common.h)
 
 add_executable(
         test_bit_array
@@ -26,8 +30,10 @@ add_executable(
         test_bloom_filter
         src/test/bloomfilter_test.c
         src/bloomfilter.c
+        src/hash.c
         include/bloomfilter.h
         include/bitarray.h
+        include/hash.h
 )
 
 add_executable(
@@ -37,8 +43,19 @@ add_executable(
         include/skiplist.h
 )
 
+add_executable(
+        test_hash_table
+        src/test/hashtable_test.c
+        src/hashtable.c
+        src/hash.c
+        include/hashtable.h
+        include/hash.h
+)
+
 target_link_libraries(vaccine_monitor -lm)
 
 target_link_libraries(test_skip_list -lm)
+
+target_link_libraries(test_hash_table -lm)
 
 target_link_libraries(test_bloom_filter -lm -lcrypto)

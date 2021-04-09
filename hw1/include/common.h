@@ -1,4 +1,4 @@
-/* util.h
+/* common.h
  * ----------------------------------------------------------------------------
  * System Programming - Homework 1
  * name:    George Tservenis
@@ -7,15 +7,8 @@
  * ----------------------------------------------------------------------------
  */
 
-#ifndef SYSPRO_HW1_UTIL_H
-#define SYSPRO_HW1_UTIL_H
-
-#include "data.h"
+#ifndef SYSPRO_HW1_COMMON_H
+#define SYSPRO_HW1_COMMON_H
 
 
-int record_parser(char *rec_file_name, GeneralData *gen_data);
-
-int input_handler(char *input);
-
-
-#endif //SYSPRO_HW1_UTIL_H
+#endif //SYSPRO_HW1_COMMON_H

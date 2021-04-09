@@ -8,7 +8,7 @@
 #include "../../include/bitarray.h"
 #include "../../include/hashtable.h"
 
-#define N 100
+#define N 1000
 #define LIMIT 10000
 #define Q 10
 
@@ -18,15 +18,16 @@
 int main(void) {
     srand(time(NULL));
     
-    HashTable *ht = htb_create(N);
+    HashTable *ht = htb_create(N/10);
 
     int x[N];
+    int a = 0;
     for (int i = 0; i < N; i++) {
         x[i] = i;
         htb_insert(ht, &x[i], sizeof(int), &x[i]);
     }
 
-    for (int i = N + 1; i < 2*N; i++) {
+    for (int i = 0; i < N; i++) {
         int *item = 0;
         item = htb_search(ht, &i, sizeof(int));
         if (item)
@@ -45,9 +46,7 @@ int main(void) {
         printf("Name: %s, Age: %s, Res: %s\n", names[i], age[i], result);
     }
 
-
-
-    htb_destroy(&ht);
+    htb_destroy(&ht, 0);
 
     return 0;
 }

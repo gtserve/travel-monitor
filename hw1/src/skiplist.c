@@ -77,7 +77,7 @@ SkipList *skl_create() {
     return list;
 }
 
-CitizenType *skl_search(SkipList *list, int key) {
+void *skl_search(SkipList *list, int key) {
     /* Search for an key in a Skip List. If key is found return its node or
      * else NULL. */
 
@@ -91,14 +91,14 @@ CitizenType *skl_search(SkipList *list, int key) {
         if (key < list->heads[0]->key) {
             return NULL;
         } else if (key == list->heads[0]->key) {
-            return list->heads[0]->citizen;
+            return list->heads[0]->item;
         }
     }
     if (list->tail != NULL) {
         if (key > list->tail->key) {
             return NULL;
         } else if (key == list->heads[0]->key) {
-            return list->heads[0]->citizen;
+            return list->heads[0]->item;
         }
     }
 
@@ -107,7 +107,7 @@ CitizenType *skl_search(SkipList *list, int key) {
         for (int l = list->levels - 1; l >= 0; l--) {
             while ((next[l] != NULL) && (next[l]->key <= key)) {
                 if (next[l]->key == key) {
-                    return next[l]->citizen;
+                    return next[l]->item;
                 }
                 next = next[l]->next;
             }
@@ -117,7 +117,7 @@ CitizenType *skl_search(SkipList *list, int key) {
     return NULL;
 }
 
-void skl_insert(SkipList *list, CitizenType *item) {
+void skl_insert(SkipList *list, int key, void *item) {
     /* Insert a new key in the Skip List (duplicates not allowed). */
 
     if (!list) {
@@ -143,10 +143,10 @@ void skl_insert(SkipList *list, CitizenType *item) {
     SLNode *current = NULL;
     SLNode **next = list->heads;
     for (int l = list->levels - 1; l >= 0; l--) {
-        while ((next[l] != NULL) && (next[l]->key <= item->id)) {
-            if (next[l]->key == item->id) {
+        while ((next[l] != NULL) && (next[l]->key <= key)) {
+            if (next[l]->key == key) {
                 // No duplicates allowed!
-                printf("[SL] Item %d is already inserted!\n", item->id);
+                printf("[SL] Item %d is already inserted!\n", key);
                 return;
             }
             current = next[l];
@@ -157,8 +157,8 @@ void skl_insert(SkipList *list, CitizenType *item) {
 
     // Create and initialize a new node.
     SLNode *new_node = (SLNode *) malloc(sizeof(SLNode));
-    new_node->key = item->id;
-    new_node->citizen = item;
+    new_node->key = key;
+    new_node->item = item;
     new_node->next = (SLNode **) malloc(sizeof(SLNode *) * new_node_lvls);
     new_node->next[0] = NULL;
 

@@ -1,4 +1,4 @@
-/* hashtable.h
+/*The Day Before hashtable.h
  * ----------------------------------------------------------------------------
  * System Programming - Homework 1
  * name:    George Tservenis
@@ -12,6 +12,8 @@
 
 #include <stddef.h>
 
+typedef void (* FP_item_free) (void **);
+
 /* ---------------------------- Data Types ---------------------------------- */
 
 typedef struct entry {
@@ -19,7 +21,6 @@ typedef struct entry {
     void *key;
     void *item;
     short key_size;
-//    short item_size;
 } EntryType;
 
 typedef struct {
@@ -37,7 +38,9 @@ void *htb_search(HashTable *hash_table, void *key, short key_size);
 
 // TODO: htb_remove
 
-void htb_destroy(HashTable **hash_table);
+void htb_destroy(HashTable **hash_table, int free_items);
+
+void htb_destroy_all(HashTable **hash_table, FP_item_free item_free);
 
 
 #endif //SYSPRO_HW1_HASHTABLE_H

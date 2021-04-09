@@ -16,6 +16,7 @@
 #include "../include/hashtable.h"
 
 #define NULL_KEY (-1)
+#define EQUAL_KEYS(k1, k1s, k2, k2s) (((k1s) == (k2s)) && (memcmp((k1), (k2), (k1s)) == 0))
 
 
 /* ------------------------- Auxiliary Functions ---------------------------- */
@@ -25,9 +26,9 @@ unsigned long hash_key(void *key, short key_size) {
     return hash_i(1, (unsigned char *) key, key_size);
 }
 
-int equal_keys(void *key1, short key1_size, void *key2, short key2_size) {
-    return ((key1_size == key2_size) && (memcmp(key1, key2, key1_size) == 0));
-}
+//int equal_keys(void *key1, short key1_size, void *key2, short key2_size) {
+//    return ((key1_size == key2_size) && (memcmp(key1, key2, key1_size) == 0));
+//}
 
 
 /* -------------------------- Basic Operations ------------------------------ */
@@ -73,7 +74,7 @@ void *htb_search(HashTable *hash_table, void *key, short key_size) {
 
     EntryType *cur_entry = hash_table->entries[index];
     while ((cur_entry) &&
-            (!equal_keys(key, key_size, cur_entry->key, cur_entry->key_size))) {
+            (!EQUAL_KEYS(key, key_size, cur_entry->key, cur_entry->key_size))) {
         cur_entry = cur_entry->next;
     }
 
@@ -81,13 +82,31 @@ void *htb_search(HashTable *hash_table, void *key, short key_size) {
 }
 
 
-void htb_destroy(HashTable **hash_table) {
+void htb_destroy(HashTable **hash_table, int free_items) {
 
     for (int i = 0; i < (*hash_table)->size; i++) {
         EntryType *current = (*hash_table)->entries[i];
         while (current) {
             EntryType *next = current->next;
             free(current->key);
+            if (free_items)
+                free(current->item);
+            free(current);
+            current = next;
+        }
+    }
+    free((*hash_table)->entries);
+    free(*hash_table);
+    *hash_table = NULL;
+}
+
+void htb_destroy_all(HashTable **hash_table, FP_item_free item_free) {
+    for (int i = 0; i < (*hash_table)->size; i++) {
+        EntryType *current = (*hash_table)->entries[i];
+        while (current) {
+            EntryType *next = current->next;
+            free(current->key);
+            (*item_free)(&current->item);
             free(current);
             current = next;
         }

@@ -10,13 +10,11 @@
 #ifndef HW_SYSPRO_SKIPLIST_H
 #define HW_SYSPRO_SKIPLIST_H
 
-#include "types.h"
-
 /* ---------------------------- Data Types ---------------------------------- */
 
 typedef struct sln {
     int key;
-    CitizenType *citizen;
+    void *item;
     struct sln **next;      // Array to next/right neighbour in each level.
 } SLNode;
 
@@ -32,9 +30,9 @@ typedef struct {
 
 SkipList *skl_create();
 
-CitizenType *skl_search(SkipList *list, int key);
+void *skl_search(SkipList *list, int key);
 
-void skl_insert(SkipList *list, CitizenType *item);
+void skl_insert(SkipList *list, int key, void *item);
 
 void skl_delete(SkipList *list, int key);
 

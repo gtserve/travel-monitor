@@ -20,7 +20,7 @@ int main(void) {
     }
 
     for (int i = 0; i < NUMBERS; ++i) {
-        skl_insert(sl, x[i]);
+        skl_insert(sl, x[i], x[i]);
     }
     skl_print(sl);
     printf("\n");

@@ -20,7 +20,6 @@
 #define USAGE_STR "Program Usage:\n" \
                   "%s [-c citizenRecordsFile] [-b bloomSize]\n"
 
-// Options: [-c citizenRecordsFile] [ -b bloomSize]
 typedef struct {
     char *c_value;
     char *b_value;
@@ -31,11 +30,12 @@ void usage(char *prog_name);
 
 int main(int argc, char **argv) {
 
-    OptionsType options = {0, 0, NULL, NULL};
+    OptionsType options = {NULL, NULL};
     opterr = 0;
 
     int c;
     while ((c = getopt(argc, argv, "c:b:")) != EOF) {
+        // Options: [-c citizenRecordsFile] [ -b bloomSize]
         switch (c) {
             case 'c':
                 options.c_value = optarg;
@@ -69,13 +69,14 @@ int main(int argc, char **argv) {
     printf("c: %s\n", options.c_value);
     printf("b: %s\n", options.b_value);
 
+    int bloom_size = (int) strtol(options.b_value, NULL, 10);
+    int exp_records = 10000;
 
-    GeneralData data = {0};
-    data.bloom_size = strtol(options.b_value, NULL, 10);
-    data.exp_records = 10000;
+    GeneralData *gen_data = gdt_create(bloom_size, exp_records);
 
-    record_parser(options.c_value, &data);
+    record_parser(options.c_value, gen_data);
 
+    gdt_destroy(&gen_data);
 
     return 0;
 }
