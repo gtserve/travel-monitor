@@ -20,13 +20,8 @@
 #define USAGE_STR "Program Usage:\n" \
                   "%s [-c citizenRecordsFile] [-b bloomSize]\n"
 
-#define MAX_CMD_ARGS 9
-#define MAX_CMD_ARG_SIZE 100
-
 // Options: [-c citizenRecordsFile] [ -b bloomSize]
 typedef struct {
-    int c_flag;
-    int b_flag;
     char *c_value;
     char *b_value;
 } OptionsType;
@@ -37,14 +32,12 @@ void usage(char *prog_name);
 int main(int argc, char **argv) {
 
     OptionsType options = {0, 0, NULL, NULL};
-
     opterr = 0;
 
     int c;
     while ((c = getopt(argc, argv, "c:b:")) != EOF) {
         switch (c) {
             case 'c':
-                options.c_flag = 1;
                 options.c_value = optarg;
                 if (!(fopen(options.c_value, "r"))) {
                     fprintf(stderr, ERR_FOPEN, options.c_value);
@@ -52,16 +45,18 @@ int main(int argc, char **argv) {
                 }
                 break;
             case 'b':
-                options.b_flag = 1;
                 options.b_value = optarg;
                 break;
             case '?':
                 if ((optopt == 'c') || (optopt == 'b')) {
-                    fprintf(stderr,"Error: Option -%c requires an argument.\n", optopt);
+                    fprintf(stderr, "Error: Option -%c requires an " \
+                            "argument.\n", optopt);
                 } else if (isprint(optopt)) {
-                    fprintf(stderr, "Error: Unknown option '-%c'.\n", optopt);
+                    fprintf(stderr, "Error: Unknown option '-%c'.\n",
+                            optopt);
                 } else {
-                    fprintf(stderr,"Error: Unknown option character '\\x%x'.\n", optopt);
+                    fprintf(stderr, "Error: Unknown option character " \
+                            "'\\x%x'.\n", optopt);
                 }
                 usage(argv[0]);
                 break;
@@ -70,12 +65,10 @@ int main(int argc, char **argv) {
         }
     }
 
-//    for (int i = optind; i < argc; i++) {
-//        printf("Non option argument %s.\n", argv[i]);
-//    }
+    printf("Passed arguments:\n");
+    printf("c: %s\n", options.c_value);
+    printf("b: %s\n", options.b_value);
 
-    printf("c: %d, %s\n", options.c_flag, options.c_value);
-    printf("b: %d, %s\n", options.b_flag, options.b_value);
 
     GeneralData data = {0};
     data.bloom_size = strtol(options.b_value, NULL, 10);
