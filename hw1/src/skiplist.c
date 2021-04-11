@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <math.h>
 
+#include "../include/util.h"
 #include "../include/skiplist.h"
 
 
@@ -29,32 +30,27 @@ int skl_get_levels(int nodes) {
     return num_levels;
 }
 
-void skl_destroy_level(SLNode *node) {
-    /* Destroy a simple Linked List of nodes recursively. */
+void skl_destroy_nodes(SLNode *node) {
+    /* Destroy all SLNodes recursively. */
 
-    if (!node) {
-        printf("[SL] Called skl_destroy_level for null node.\n");
-        return;
-    }
+    ERR_CHECK_NULL(node,"ERROR: [SL] destroy_nodes(): null node.\n");
 
     if (node->next[0] != NULL)
-        skl_destroy_level(node->next[0]);
+        skl_destroy_nodes(node->next[0]);
 
     // Destroy node.
     free(node->next);
     free(node);
 }
 
-void skl_destroy_all_level(SLNode *node, FP_item_free item_free) {
-    /* Destroy a simple Linked List of nodes recursively. */
+void skl_destroy_nodes_all(SLNode *node, FP_item_free item_free) {
+    /* Destroy all SLNodes recursively and their items. */
 
-    if (!node) {
-        printf("[SL] Called skl_destroy_level for null node.\n");
-        return;
-    }
+    ERR_CHECK_NULL(node,"ERROR: [SL] destroy_nodes_all(): null node.\n");
+    ERR_CHECK_NULL(item_free,"ERROR: [SL] destroy_nodes_all(): null fun_ptr.\n");
 
     if (node->next[0] != NULL)
-        skl_destroy_level(node->next[0]);
+        skl_destroy_nodes_all(node->next[0], item_free);
 
     // Destroy node.
     free(node->next);
@@ -65,10 +61,8 @@ void skl_destroy_all_level(SLNode *node, FP_item_free item_free) {
 void skl_print_level(SLNode *node, int level) {
     /* Print a simple Linked List of nodes recursively. */
 
-    if (!node) {
-        printf("[SL] Called skl_print_level for null node.\n");
-        return;
-    }
+    ERR_CHECK_NULL(node,"ERROR: [SL] skl_print_level(): null node.\n");
+
 
     printf("[%d] -> ", node->key);
     if (node->next[level] != NULL) {
@@ -98,12 +92,10 @@ void *skl_search(SkipList *list, int key) {
     /* Search for an key in a Skip List. If key is found return its node or
      * else NULL. */
 
-    if (!list) {
-        printf("[SL] Called skl_search for null list.\n");
-        return NULL;
-    }
+    ERR_CHECK_NULL_EXIT(list,"ERROR: [SL] skl_search(): null list.\n", NULL);
 
-    // Simple checks that can be done quickly.
+
+    // Fast checks to determine if key is one of the bounds or out of them.
     if (list->heads[0] != NULL) {
         if (key < list->heads[0]->key) {
             return NULL;
@@ -119,6 +111,7 @@ void *skl_search(SkipList *list, int key) {
         }
     }
 
+    // Search the Skip List.
     if (list->nodes > 2) {
         SLNode **next = list->heads;
         for (int l = list->levels - 1; l >= 0; l--) {
@@ -137,10 +130,8 @@ void *skl_search(SkipList *list, int key) {
 void skl_insert(SkipList *list, int key, void *item) {
     /* Insert a new key in the Skip List (duplicates not allowed). */
 
-    if (!list) {
-        printf("[SL] Called skl_insert for null list.\n");
-        return;
-    }
+    ERR_CHECK_NULL(list,"ERROR: [SL] skl_insert(): null list.\n");
+
 
     // Determine the levels of the new node.
     int new_node_lvls = skl_get_levels(list->nodes);
@@ -163,7 +154,7 @@ void skl_insert(SkipList *list, int key, void *item) {
         while ((next[l] != NULL) && (next[l]->key <= key)) {
             if (next[l]->key == key) {
                 // No duplicates allowed!
-                printf("[SL] Item %d is already inserted!\n", key);
+                printf("[SL] Key %d already inserted!\n", key);
                 return;
             }
             current = next[l];
@@ -199,10 +190,8 @@ void skl_insert(SkipList *list, int key, void *item) {
 void skl_delete(SkipList *list, int key) {
     /* Delete an key from the Skip List. */
 
-    if (!list) {
-        printf("[SL] Called skl_delete for null list.\n");
-        return;
-    }
+    ERR_CHECK_NULL(list,"ERROR: [SL] skl_delete(): null list.\n");
+
 
     // Find the target node and its left/previous neighbours.
     SLNode *prev[list->levels];
@@ -244,10 +233,8 @@ void skl_delete(SkipList *list, int key) {
 void skl_print(SkipList *list) {
     /* Print a whole Skip List. */
 
-    if (!list) {
-        printf("[SL] Called skl_print for null list.\n");
-        return;
-    }
+    ERR_CHECK_NULL(list,"ERROR: [SL] skl_print(): null list.\n");
+
 
     printf("Skip List (N%d, L%d):\n", list->nodes, list->levels);
     for (int l = list->levels - 1; l >= 0; l--) {
@@ -263,14 +250,11 @@ void skl_print(SkipList *list) {
 void skl_destroy(SkipList **list) {
     /* Deallocate used space and destroy a Skip List. */
 
-    if (!(*list)) {
-        printf("[SL] Called skl_destroy for null list.\n");
-        return;
-    }
+    ERR_CHECK_NULL(*list,"ERROR: [SL] skl_destroy(): null list.\n");
 
-    // Destroy all nodes using the lowest level.
+    // Destroy all nodes traversing recursively the lowest level.
     if ((*list)->heads[0] != NULL)
-        skl_destroy_level((*list)->heads[0]);
+        skl_destroy_nodes((*list)->heads[0]);
 
     // Destroy Skip List.
     free((*list)->heads);
@@ -279,16 +263,14 @@ void skl_destroy(SkipList **list) {
 }
 
 void skl_destroy_all(SkipList **list, FP_item_free item_free) {
-    /* Deallocate used space and destroy a Skip List. */
+    /* Deallocate used space and destroy a Skip List and its items. */
 
-    if (!(*list)) {
-        printf("[SL] Called skl_destroy for null list.\n");
-        return;
-    }
+    ERR_CHECK_NULL(*list,"ERROR: [SL] skl_destroy_all(): null list.\n");
+    ERR_CHECK_NULL(item_free,"ERROR: [SL] skl_destroy_all(): null fun_ptr.\n");
 
-    // Destroy all nodes using the lowest level.
+    // Destroy all nodes traversing recursively the lowest level.
     if ((*list)->heads[0] != NULL)
-        skl_destroy_all_level((*list)->heads[0], item_free);
+        skl_destroy_nodes_all((*list)->heads[0], item_free);
 
     // Destroy Skip List.
     free((*list)->heads);

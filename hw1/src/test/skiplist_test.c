@@ -1,12 +1,12 @@
+
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 #include <time.h>
 
 #include "../../include/skiplist.h"
 
-#define NUMBERS 25
-#define RANGE 100
+#define N 1000
+#define LIMIT 10000
 
 
 int main(void) {
@@ -14,25 +14,26 @@ int main(void) {
 
     SkipList *sl = skl_create();
 
-    int x[NUMBERS];
-    for (int i = 0; i < NUMBERS; ++i) {
-        x[i] = rand() % RANGE;
+    // Create array of number.
+    int x[N];
+    for (int i = 0; i < N; ++i) {
+        x[i] = rand() % LIMIT;
+    }
+//    for (int i = 0; i < N; ++i) {
+//        x[i] = i;
+//    }
+
+    // Insert number as keys and items.
+    for (int i = 0; i < N; ++i) {
+        skl_insert(sl, x[i], &x[i]);
     }
 
-    for (int i = 0; i < NUMBERS; ++i) {
-        skl_insert(sl, x[i], x[i]);
+    // Search random positions in previous array.
+    for (int i = 0; i < N; i++) {
+        int *k = skl_search(sl, x[i]);
+        if (!k)
+            printf("KEY: %d NOT FOUND\n", x[i]);
     }
-    skl_print(sl);
-    printf("\n");
-
-
-    for (int i = 0; i < NUMBERS / 4; i++) {
-        int j = rand() % NUMBERS;
-        printf("Deleting key [%d].\n", x[j]);
-        skl_delete(sl, x[j]);
-    }
-    skl_print(sl);
-    printf("\n");
 
     skl_destroy(&sl);
     return 0;
