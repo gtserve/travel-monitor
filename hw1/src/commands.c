@@ -435,7 +435,6 @@ int vaccinate_now(GeneralData *data, int id, char *first_name, char *last_name,
     char buffer[200];
     sprintf(buffer, "%d %s %s %s %d %s YES %s\n", id, first_name,
             last_name, country_name, age, virus_name, todays_date);
-    unsigned long buffer_len = strlen(buffer);
 
     // Search citizen in data.
     CitizenType *citizen = htb_search(data->citizens, &id, sizeof(int));
