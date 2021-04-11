@@ -15,7 +15,7 @@ ERR_FILE_IO=2
 NAMES_FILE="./resources/names.txt"
 SURNAMES_FILE="./resources/surnames.txt"
 
-MAX_ID=10000
+MAX_ID=9999
 
 # ------------------------------ Functions ------------------------------------
 print_usage() {

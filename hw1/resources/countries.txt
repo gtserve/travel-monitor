@@ -39,7 +39,7 @@ Comoros
 Republic_of_the_Congo
 Democratic_Republic_of_the_Congo
 Costa_Rica
-Cote_d'Ivoire
+Cote_dIvoire
 Croatia
 Cuba
 Cyprus
