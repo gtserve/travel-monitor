@@ -105,7 +105,7 @@ touch "$i_file"
 declare -a id_array
 num=0
 while [ "$num" -lt "$num_records" ]; do
-    id_array+=($(seq "$MAX_ID"))
+    id_array+=($(seq 0 $(("$MAX_ID" - 1))))
     num=$((num + "$MAX_ID"))
 done
 id_array=($(printf '%s\n' "${id_array[@]}" | shuf | head -n "$num_records"))
