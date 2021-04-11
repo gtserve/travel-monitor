@@ -118,6 +118,7 @@ HT_Iterator *htb_iter_create(HashTable *table) {
     iter->index = -1;
     iter->value = NULL;
     iter->table = table;
+    return iter;
 }
 
 void *htb_iter_next(HT_Iterator *iterator) {

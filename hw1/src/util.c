@@ -62,8 +62,9 @@ char *get_todays_date(void) {
     time_t t = time(NULL);
     struct tm tm = *localtime(&t);
     char *date = (char *) malloc(sizeof(char) * 11);
-    sprintf(date, "%02d-%02d-%d", tm.tm_mday, tm.tm_mon + 1,
-            tm.tm_year + 1900);
+    sprintf(date, "%02d-%02d-%d", (unsigned int) tm.tm_mday % 31,
+            (unsigned int) (tm.tm_mon + 1) % 13,
+            (unsigned int) (tm.tm_year + 1900) % 10000);
     return date;
 }
 

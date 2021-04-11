@@ -31,10 +31,8 @@ enum cmd_code {
 int get_command(char *buffer) {
 
     char *token = NULL;
-    if ((token = strtok(buffer, TOK_DELIM)) == NULL) {
-        fprintf(stderr, "Error: Command '%s' is not acceptable.\n", token);
+    if ((token = strtok(buffer, TOK_DELIM)) == NULL)
         return -1;
-    }
 
     if (*token != '/') {
         fprintf(stderr, "Error: Commands should start with '/'.\n");
@@ -65,10 +63,9 @@ int get_command(char *buffer) {
 
 int get_id(char *buffer) {
 
-    // TODO: REmove Error from strtok
     char *token = NULL;
     if ((token = strtok(NULL, TOK_DELIM)) == NULL) {
-        fprintf(stderr, "Error: Citizen ID '%s' is not acceptable.\n", token);
+        fprintf(stderr, "Error: Citizen ID is not acceptable.\n");
         return -1;
     }
 

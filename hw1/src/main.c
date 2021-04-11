@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
         // Options: [-c citizenRecordsFile] [ -b bloomSize]
         switch (c) {
             case 'c':
-                if (!(fopen(optarg, "r"))) {
+                if (access(optarg, F_OK)) {
                     fprintf(stderr, ERR_MSG_FOPEN, optarg);
                     exit(EXIT_FAILURE);
                 }
@@ -127,6 +127,7 @@ int record_parser(char *records_file_name, GeneralData *gen_data) {
         rec_count++;
     }
 
+    fclose(records_file);
     free(line);
     return 0;
 }

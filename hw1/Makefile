@@ -5,20 +5,17 @@
 # sdi1500164@di.uoa.gr
 # -----------------------------------------------------------------------------
 
-SRC = src/main.c
-#HDR =
-OBJ = main.o
+
+#SRC = 	./src/main.c ./src/bloomfilter.c ./src/commands.c ./src/data.c ./src/handler.c ./src/hash.c \
+# 		./src/hashtable.c ./src/skiplist.c ./src/util.c
+SRC = $(wildcard ./src/*.c)
+#OBJ = main.o
 EXE = vaccineMonitor
 CC  = gcc
-CFL = -g -Wall -Werror
-#LIB   = -lm -lcrypto
+CFL = -O2 -g -Wall -Werror
 
-build:
-	mkdir ./build
-	$(CC) $(CFL) $(SRC) -o ./build/$(EXE)
-
-execute:
-	@ ./build/$(EXE)
+compile:
+	$(CC) $(CFL) $(SRC) -lm -o $(EXE)
 
 clean:
-	rm -rf ./build
+	rm -f $(EXE)

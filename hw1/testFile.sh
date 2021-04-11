@@ -12,8 +12,8 @@ ERR_NUM_ARGS=1
 ERR_FILE_IO=2
 #ERR_WRONG_ARG=3
 
-NAMES_FILE="names.txt"
-SURNAMES_FILE="surnames.txt"
+NAMES_FILE="./resources/names.txt"
+SURNAMES_FILE="./resources/surnames.txt"
 
 MAX_ID=10000
 
