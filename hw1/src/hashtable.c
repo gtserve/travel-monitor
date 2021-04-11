@@ -16,7 +16,8 @@
 #include "../include/hashtable.h"
 
 #define NULL_KEY (-1)
-#define EQUAL_KEYS(k1, k1s, k2, k2s) (((k1s) == (k2s)) && (memcmp((k1), (k2), (k1s)) == 0))
+#define EQUAL_KEYS(k1, k1s, k2, k2s)\
+(((k1s) == (k2s)) && (memcmp((k1), (k2), (k1s)) == 0))
 
 
 /* ------------------------- Auxiliary Functions ---------------------------- */
@@ -26,21 +27,17 @@ unsigned long hash_key(void *key, short key_size) {
     return hash_i(1, (unsigned char *) key, key_size);
 }
 
-//int equal_keys(void *key1, short key1_size, void *key2, short key2_size) {
-//    return ((key1_size == key2_size) && (memcmp(key1, key2, key1_size) == 0));
-//}
-
 
 /* -------------------------- Basic Operations ------------------------------ */
 
 HashTable *htb_create(size_t size) {
 
-    int primes[5] = {11, 101, 1009, 10009, 1000003};
-    int rank = (int) round(log10((double) size)) - 1;
+    int primes[6] = {1, 11, 101, 1009, 10009, 1000003};
+    int rank = (int) round(log10((double) size));
     if (rank < 0)
         rank = 0;
-    if (rank > 4)
-        rank = 4;
+    if (rank > 5)
+        rank = 5;
     size = primes[rank];
 
     HashTable *hash_table = (HashTable *) malloc(sizeof(HashTable));
@@ -114,4 +111,39 @@ void htb_destroy_all(HashTable **hash_table, FP_item_free item_free) {
     free((*hash_table)->entries);
     free(*hash_table);
     *hash_table = NULL;
+}
+
+
+HT_Iterator *htb_iter_create(HashTable *table) {
+    HT_Iterator *iter = (HT_Iterator *) malloc(sizeof(HT_Iterator));
+    iter->index = -1;
+    iter->value = NULL;
+    iter->table = table;
+}
+
+void *htb_iter_next(HT_Iterator *iterator) {
+    if ((iterator->index != -1) && (iterator->value == NULL))
+        return NULL;
+
+    if (iterator->index == -1) {
+        iterator->index = 0;
+        iterator->value = iterator->table->entries[0];
+//        return ((iterator->value) ? iterator->value->item : NULL);
+    } else {
+        iterator->value = iterator->value->next;
+    }
+
+    while (iterator->value == NULL) {
+        if (++(iterator->index) == iterator->table->size) {
+            return NULL;
+        }
+        iterator->value = iterator->table->entries[iterator->index];
+    }
+
+    return iterator->value->item;
+}
+
+void htb_iter_destroy(HT_Iterator **iterator) {
+    free(*iterator);
+    *iterator = NULL;
 }

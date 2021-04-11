@@ -14,6 +14,8 @@
 #include <string.h>
 
 #include "../include/util.h"
+#include "../include/commands.h"
+#include "../include/handler.h"
 
 #define PROG_NAME "vaccineMonitor"
 #define ERR_FOPEN "Error: Couldn't open file '%s'.\n"
@@ -26,6 +28,8 @@ typedef struct {
 } OptionsType;
 
 void usage(char *prog_name);
+
+int record_parser(char *rec_file_name, GeneralData *gen_data);
 
 
 int main(int argc, char **argv) {
@@ -76,6 +80,8 @@ int main(int argc, char **argv) {
 
     record_parser(options.c_value, gen_data);
 
+    handler(gen_data);
+
     gdt_destroy(&gen_data);
 
     return 0;
@@ -84,4 +90,23 @@ int main(int argc, char **argv) {
 void usage(char *prog_name) {
     fprintf(stderr, USAGE_STR, (prog_name ? prog_name : PROG_NAME));
     exit(EXIT_FAILURE);
+}
+
+int record_parser(char *rec_file_name, GeneralData *gen_data) {
+    // 889 John Papadopoulos Greece 52 COVID-19 YES 27-12-2020
+    // 776 Maria Tortellini Italy 36 SARS-1 NO
+
+    FILE *rec_file = fopen(rec_file_name, "r");
+    char *line = NULL;
+    size_t line_length = 0;
+    int line_index = 0;
+    size_t bytes_read = 0;
+    while ((bytes_read = getline(&line, &line_length, rec_file)) != -1) {
+        insert_record(gen_data, line);
+        line_index++;
+    }
+
+    free(line);
+
+    return 0;
 }

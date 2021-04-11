@@ -10,6 +10,8 @@
 #ifndef HW_SYSPRO_SKIPLIST_H
 #define HW_SYSPRO_SKIPLIST_H
 
+typedef void (* FP_item_free) (void **);
+
 /* ---------------------------- Data Types ---------------------------------- */
 
 typedef struct sln {
@@ -39,6 +41,8 @@ void skl_delete(SkipList *list, int key);
 void skl_print(SkipList *list);
 
 void skl_destroy(SkipList **list);
+
+void skl_destroy_all(SkipList **list, FP_item_free item_free);
 
 
 #endif //HW_SYSPRO_SKIPLIST_H

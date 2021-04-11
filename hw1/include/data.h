@@ -24,11 +24,17 @@ typedef struct {
 
 typedef struct {
     int id;
-    char *firstName;
-    char *lastName;
+    char *first_name;
+    char *last_name;
     CountryType *country;
     unsigned int age;
+//    HashTable *vaccinations;
 } CitizenType;
+
+typedef struct {
+    CitizenType *citizen;
+    char *date;
+} VaccinationType;
 
 typedef struct {
     char *name;
@@ -46,6 +52,12 @@ typedef struct {
 } GeneralData;
 
 /* -------------------------- Basic Operations ------------------------------ */
+
+/* VaccinationType */
+void vac_destroy(VaccinationType **vaccination);
+
+/* CitizenType */
+void cnt_destroy(CountryType **country);
 
 /* CitizenType */
 void ctz_destroy(CitizenType **citizen);

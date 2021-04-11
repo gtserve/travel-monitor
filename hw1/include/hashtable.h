@@ -28,6 +28,12 @@ typedef struct {
     size_t size;
 } HashTable;
 
+typedef struct {
+    int index;
+    EntryType *value;
+    HashTable *table;
+} HT_Iterator;
+
 /* -------------------------- Basic Operations ------------------------------ */
 
 HashTable *htb_create(size_t size);
@@ -36,7 +42,13 @@ void htb_insert(HashTable *hash_table, void *key, short key_size, void *item);
 
 void *htb_search(HashTable *hash_table, void *key, short key_size);
 
-// TODO: htb_remove
+// htb_remove
+
+HT_Iterator *htb_iter_create(HashTable *table);
+
+void *htb_iter_next(HT_Iterator *iterator);
+
+void htb_iter_destroy(HT_Iterator **iterator);
 
 void htb_destroy(HashTable **hash_table, int free_items);
 
