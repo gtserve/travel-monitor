@@ -66,10 +66,6 @@ void ctz_destroy(CitizenType **citizen);
 /* VirusInfo */
 VirusInfo *vir_create(char *name, unsigned int bloom_size, unsigned int exp_records);
 
-void vir_insert(VirusInfo *virus, CitizenType *citizen, int vaccinated);
-
-void vir_vaccinate(VirusInfo *virus, CitizenType *citizen);
-
 void vir_destroy(VirusInfo **virus);
 
 /* GeneralData */

@@ -32,7 +32,7 @@ int vaccine_status_bloom(GeneralData *data, int citizen_id, char *virus_name) {
             printf("NOT VACCINATED\n");
         }
     } else {
-        printf("VIRUS '%s' NOT IN DATA\n", virus_name);
+        fprintf(stderr, "ERROR: VIRUS '%s' NOT IN DATA\n", virus_name);
         return -1;
     }
 
@@ -42,7 +42,7 @@ int vaccine_status_bloom(GeneralData *data, int citizen_id, char *virus_name) {
 int vaccine_status(GeneralData *data, int citizen_id, char *virus_name) {
     CitizenType *citizen = htb_search(data->citizens, &citizen_id, sizeof(int));
     if (!citizen) {
-        printf("CITIZEN WITH ID %d NOT IN DATA\n", citizen_id);
+        fprintf(stderr, "ERROR: CITIZEN WITH ID %d NOT IN DATA\n", citizen_id);
         return -1;
     }
 
@@ -56,7 +56,7 @@ int vaccine_status(GeneralData *data, int citizen_id, char *virus_name) {
                 printf("NOT VACCINATED\n");
             }
         } else {
-            printf("VIRUS '%s' NOT IN DATA\n", virus_name);
+            fprintf(stderr, "VIRUS '%s' NOT IN DATA\n", virus_name);
             return -1;
         }
     } else {
@@ -426,21 +426,33 @@ int vaccinate_now(GeneralData *data, int id, char *first_name, char *last_name,
 
     VaccinationType *vaccination = skl_search(virus->vaccinated, id);
     if (vaccination) {
-        printf("ERROR: CITIZEN %d ALREADY VACCINATED ON %s\n", id, vaccination->date);
+        fprintf(stderr, "ERROR: CITIZEN %d ALREADY VACCINATED ON %s\n", id, vaccination->date);
         return -1;
     }
 
     char *todays_date = get_todays_date();
 
+    char buffer[200];
+    sprintf(buffer, "%d %s %s %s %d %s YES %s\n", id, first_name,
+            last_name, country_name, age, virus_name, todays_date);
+    unsigned long buffer_len = strlen(buffer);
+
     // Search citizen in data.
     CitizenType *citizen = htb_search(data->citizens, &id, sizeof(int));
     if (!citizen) {
-        char buffer[200];
-        sprintf(buffer, "%d %s %s %s %d %s YES %s", id, first_name,
-                last_name, country_name, age, virus_name, todays_date);
         insert_record(data, buffer);
         free(todays_date);
         return 0;
+    }
+
+    // Must have same attributes
+    if (!(STR_EQUALS(first_name, citizen->first_name) &&
+          STR_EQUALS(last_name, citizen->last_name) &&
+          STR_EQUALS(country_name, citizen->country->name) &&
+          age == citizen->age)) {
+        fprintf(stderr, "ERROR: CREDENTIALS MISMATCH FOR ID %d\n", id);
+        free(todays_date);
+        return -1;
     }
 
     // Create new vaccination
@@ -463,7 +475,7 @@ int vaccinate_now(GeneralData *data, int id, char *first_name, char *last_name,
 int list_not_vaccinated(GeneralData *data, char *virus_name) {
     VirusInfo *virus = htb_search(data->viruses, virus_name, STR_BYTES(virus_name));
     if (!virus) {
-        printf("VIRUS '%s' NOT IN DATA\n", virus_name);
+        fprintf(stderr, "ERROR: VIRUS '%s' NOT IN DATA\n", virus_name);
         return -1;
     }
 

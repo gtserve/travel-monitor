@@ -51,26 +51,6 @@ VirusInfo *vir_create(char *name, unsigned int bloom_size, unsigned int exp_reco
     return v_info;
 }
 
-void vir_insert(VirusInfo *virus, CitizenType *citizen, int vaccinated) {
-    if (vaccinated == 0) {
-        skl_insert(virus->not_vaccinated, citizen->id, citizen);
-    } else {
-        blf_add(virus->filter, citizen->id);
-        skl_insert(virus->vaccinated, citizen->id, citizen);
-    }
-}
-
-void vir_vaccinate(VirusInfo *virus, CitizenType *citizen) {
-    if (skl_search(virus->vaccinated, citizen->id)) {
-        printf("ERROR: Vaccinated!\n");
-    } else {
-        if (skl_search(virus->not_vaccinated, citizen->id)) {
-            skl_delete(virus->not_vaccinated, citizen->id);
-        }
-        vir_insert(virus, citizen, 1);
-    }
-}
-
 void vir_destroy(VirusInfo **virus) {
     free((*virus)->name);
     blf_destroy(&(*virus)->filter);
