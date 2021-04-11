@@ -12,7 +12,7 @@
 
 #include <stddef.h>
 
-typedef void (* FP_item_free) (void **);
+#include "util.h"
 
 /* ---------------------------- Data Types ---------------------------------- */
 
@@ -47,6 +47,8 @@ void *htb_search(HashTable *hash_table, void *key, short key_size);
 HT_Iterator *htb_iter_create(HashTable *table);
 
 void *htb_iter_next(HT_Iterator *iterator);
+
+EntryType *htb_iter_next_entry(HT_Iterator *iterator);
 
 void htb_iter_destroy(HT_Iterator **iterator);
 

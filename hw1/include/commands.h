@@ -12,9 +12,16 @@
 
 #include "data.h"
 
+
 int vaccine_status_bloom(GeneralData *data, int citizen_id, char *virus_name);
 
 int vaccine_status(GeneralData *data, int citizen_id, char *virus_name);
+
+int populationStatus(GeneralData *data, char *country_name, char *virus_name,
+                     char *date1, char *date2);
+
+int popStatusByAge(GeneralData *data, char *country_name, char *virus_name,
+                     char *date1, char *date2);
 
 int insert_record(GeneralData *data, char *record);
 

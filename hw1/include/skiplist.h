@@ -10,7 +10,7 @@
 #ifndef HW_SYSPRO_SKIPLIST_H
 #define HW_SYSPRO_SKIPLIST_H
 
-typedef void (* FP_item_free) (void **);
+#include "util.h"
 
 /* ---------------------------- Data Types ---------------------------------- */
 
@@ -33,6 +33,8 @@ typedef struct {
 SkipList *skl_create();
 
 void *skl_search(SkipList *list, int key);
+
+SLNode * skl_get_next_node(SkipList *list, int key);
 
 void skl_insert(SkipList *list, int key, void *item);
 

@@ -78,7 +78,6 @@ void *htb_search(HashTable *hash_table, void *key, short key_size) {
     return ((cur_entry) ? cur_entry->item : NULL);
 }
 
-
 void htb_destroy(HashTable **hash_table, int free_items) {
 
     for (int i = 0; i < (*hash_table)->size; i++) {
@@ -128,7 +127,6 @@ void *htb_iter_next(HT_Iterator *iterator) {
     if (iterator->index == -1) {
         iterator->index = 0;
         iterator->value = iterator->table->entries[0];
-//        return ((iterator->value) ? iterator->value->item : NULL);
     } else {
         iterator->value = iterator->value->next;
     }
@@ -141,6 +139,27 @@ void *htb_iter_next(HT_Iterator *iterator) {
     }
 
     return iterator->value->item;
+}
+
+EntryType *htb_iter_next_entry(HT_Iterator *iterator) {
+    if ((iterator->index != -1) && (iterator->value == NULL))
+        return NULL;
+
+    if (iterator->index == -1) {
+        iterator->index = 0;
+        iterator->value = iterator->table->entries[0];
+    } else {
+        iterator->value = iterator->value->next;
+    }
+
+    while (iterator->value == NULL) {
+        if (++(iterator->index) == iterator->table->size) {
+            return NULL;
+        }
+        iterator->value = iterator->table->entries[iterator->index];
+    }
+
+    return iterator->value;
 }
 
 void htb_iter_destroy(HT_Iterator **iterator) {

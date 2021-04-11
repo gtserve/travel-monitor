@@ -10,8 +10,6 @@
 #ifndef SYSPRO_HW1_UTIL_H
 #define SYSPRO_HW1_UTIL_H
 
-#include "data.h"
-
 #define TOK_DELIM " \n"
 
 // String Operations
@@ -24,14 +22,13 @@
 }
 
 // Error Operations
-#define ERR_CHECK_NULL_EXIT(ptr, msg, exit)     \
-{                                               \
-    if (!(ptr)) {                               \
-        fprintf(stderr, (msg));                 \
-        return (exit);                          \
-    }                                           \
+#define ERR_CHECK_NULL_RETURN(ptr, msg, ret)        \
+{                                                   \
+    if (!(ptr)) {                                   \
+        fprintf(stderr, (msg));                     \
+        return (ret);                               \
+    }                                               \
 }
-
 #define ERR_CHECK_NULL(ptr, msg)                \
 {                                               \
     if (!(ptr)) {                               \
@@ -40,6 +37,8 @@
     }                                           \
 }
 
+typedef void (* FP_item_free) (void **);
+
 
 int str_is_alpha(char *str);
 
@@ -47,11 +46,18 @@ int str_is_int(char *str);
 
 int str_is_alpha_or_c(char *str, char c);
 
+int str_is_alphanum_or_c(char *str, char c);
+
 int str_is_digit_or_c(char *str, char c);
 
 void str_replace(char *str, int length, char a, char b);
 
 char *get_todays_date(void);
 
+int date_to_days(char *date);
+
+int compose_key(int id, char *date);
+
+int get_age_group(int age);
 
 #endif //SYSPRO_HW1_UTIL_H

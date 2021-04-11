@@ -11,30 +11,37 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <ctype.h>
-#include <string.h>
+#include <errno.h>
 
 #include "../include/util.h"
 #include "../include/commands.h"
 #include "../include/handler.h"
 
 #define PROG_NAME "vaccineMonitor"
-#define ERR_FOPEN "Error: Couldn't open file '%s'.\n"
 #define USAGE_STR "Program Usage:\n" \
                   "%s [-c citizenRecordsFile] [-b bloomSize]\n"
 
+// Error messages
+#define ERR_MSG_FOPEN "ERROR: Couldn't open file '%s'.\n"
+#define ERR_MSG_NOT_INT "ERROR: Bloom size '%s' must be an integer.\n"
+#define ERR_MSG_NOT_POS "ERROR: Bloom size '%s' must be positive.\n"
+#define ERR_MSG_ARG "ERROR: Option -%c requires an argument.\n"
+#define ERR_MSG_UNKNOWN "ERROR: Unknown option -%c.\n"
+#define ERR_MSG_NOT_PRINT "ERROR: Unknown option character '\\x%x'.\n"
+
 typedef struct {
-    char *c_value;
-    char *b_value;
+    char *record_file;
+    int bloom_size;
 } OptionsType;
 
 void usage(char *prog_name);
 
-int record_parser(char *rec_file_name, GeneralData *gen_data);
+int record_parser(char *records_file_name, GeneralData *gen_data);
 
 
 int main(int argc, char **argv) {
 
-    OptionsType options = {NULL, NULL};
+    OptionsType opt = {NULL, 0};
     opterr = 0;
 
     int c;
@@ -42,25 +49,30 @@ int main(int argc, char **argv) {
         // Options: [-c citizenRecordsFile] [ -b bloomSize]
         switch (c) {
             case 'c':
-                options.c_value = optarg;
-                if (!(fopen(options.c_value, "r"))) {
-                    fprintf(stderr, ERR_FOPEN, options.c_value);
+                if (!(fopen(optarg, "r"))) {
+                    fprintf(stderr, ERR_MSG_FOPEN, optarg);
+                    exit(EXIT_FAILURE);
+                }
+                opt.record_file = optarg;
+                break;
+            case 'b':
+                if (!str_is_int(optarg)) {
+                    fprintf(stderr, ERR_MSG_NOT_INT, optarg);
+                    exit(EXIT_FAILURE);
+                }
+                if ((opt.bloom_size = (int) strtol(optarg,
+                                                   NULL, 10)) < 0) {
+                    fprintf(stderr, ERR_MSG_NOT_POS, optarg);
                     exit(EXIT_FAILURE);
                 }
                 break;
-            case 'b':
-                options.b_value = optarg;
-                break;
             case '?':
                 if ((optopt == 'c') || (optopt == 'b')) {
-                    fprintf(stderr, "Error: Option -%c requires an " \
-                            "argument.\n", optopt);
+                    fprintf(stderr, ERR_MSG_ARG, optopt);
                 } else if (isprint(optopt)) {
-                    fprintf(stderr, "Error: Unknown option '-%c'.\n",
-                            optopt);
+                    fprintf(stderr, ERR_MSG_UNKNOWN, optopt);
                 } else {
-                    fprintf(stderr, "Error: Unknown option character " \
-                            "'\\x%x'.\n", optopt);
+                    fprintf(stderr, ERR_MSG_NOT_PRINT, optopt);
                 }
                 usage(argv[0]);
                 break;
@@ -69,21 +81,20 @@ int main(int argc, char **argv) {
         }
     }
 
-    printf("Passed arguments:\n");
-    printf("c: %s\n", options.c_value);
-    printf("b: %s\n", options.b_value);
+    printf("RECORD_FILE: %s\n", opt.record_file);
+    printf("BLOOM_SIZE:  %d\n", opt.bloom_size);
 
-    int bloom_size = (int) strtol(options.b_value, NULL, 10);
     int exp_records = 10000;
 
-    GeneralData *gen_data = gdt_create(bloom_size, exp_records);
+    GeneralData *gen_data = gdt_create(opt.bloom_size, exp_records);
 
-    record_parser(options.c_value, gen_data);
+    // Parse records and save them in data.
+    record_parser(opt.record_file, gen_data);
 
-    handler(gen_data);
+    // Handle commands from input.
+    cmd_handler(gen_data);
 
     gdt_destroy(&gen_data);
-
     return 0;
 }
 
@@ -92,21 +103,30 @@ void usage(char *prog_name) {
     exit(EXIT_FAILURE);
 }
 
-int record_parser(char *rec_file_name, GeneralData *gen_data) {
-    // 889 John Papadopoulos Greece 52 COVID-19 YES 27-12-2020
-    // 776 Maria Tortellini Italy 36 SARS-1 NO
+int record_parser(char *records_file_name, GeneralData *gen_data) {
 
-    FILE *rec_file = fopen(rec_file_name, "r");
+    FILE *records_file = fopen(records_file_name, "r");
+    int rec_count = 0;
+
     char *line = NULL;
     size_t line_length = 0;
-    int line_index = 0;
-    size_t bytes_read = 0;
-    while ((bytes_read = getline(&line, &line_length, rec_file)) != -1) {
+    size_t bytes;
+    while ((bytes = getline(&line, &line_length, records_file)) != -1) {
+        if (bytes == -1) {
+            if (errno == EINVAL) {
+                fprintf(stderr, "[RP] ERROR: getline() wrong args.\n");
+                continue;
+            } else if (errno == ENOMEM) {
+                fprintf(stderr, "[RP] ERROR: getline() no memory.\n");
+                continue;
+            }
+        }
+
         insert_record(gen_data, line);
-        line_index++;
+
+        rec_count++;
     }
 
     free(line);
-
     return 0;
 }

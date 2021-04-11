@@ -20,6 +20,7 @@
 typedef struct {
     char *name;
     unsigned int population;
+    unsigned int pop_by_age[4];
 } CountryType;
 
 typedef struct {
@@ -28,7 +29,6 @@ typedef struct {
     char *last_name;
     CountryType *country;
     unsigned int age;
-//    HashTable *vaccinations;
 } CitizenType;
 
 typedef struct {
@@ -39,8 +39,9 @@ typedef struct {
 typedef struct {
     char *name;
     BloomFilter *filter;
-    SkipList *vaccinated_list;
-    SkipList *not_vaccinated_list;
+    SkipList *vaccinated;
+    SkipList *not_vaccinated;
+    SkipList *vaccinations_by_date;
 } VirusInfo;
 
 typedef struct {

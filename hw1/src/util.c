@@ -14,6 +14,11 @@
 
 #include "../include/util.h"
 
+#define FIRST_DATE "01-01-1600"
+
+#define EVAL_DIGIT(c) ((c) - '0')
+
+static int fd_days = -1;
 
 void str_replace(char *str, int length, char a, char b) {
     for (int i = 0; i < length; i++) {
@@ -39,6 +44,13 @@ int str_is_alpha_or_c(char *str, char c) {
     return ((*str) ? 0 : 1);
 }
 
+int str_is_alphanum_or_c(char *str, char c) {
+    while ((*str) && (isalnum(*str) || (*str == c))) {
+        str++;
+    }
+    return ((*str) ? 0 : 1);
+}
+
 int str_is_digit_or_c(char *str, char c) {
     while ((*str) && (isdigit(*str) || (*str == c))) {
         str++;
@@ -53,4 +65,31 @@ char *get_todays_date(void) {
     sprintf(date, "%02d-%02d-%d", tm.tm_mday, tm.tm_mon + 1,
             tm.tm_year + 1900);
     return date;
+}
+
+int date_to_days(char *date) {
+    // DD-MM-YYYY
+    // 01-34-6789
+
+    int d = EVAL_DIGIT(date[0]) * 10 + EVAL_DIGIT(date[1]);
+    int m = EVAL_DIGIT(date[3]) * 10 + EVAL_DIGIT(date[4]);
+    int y = EVAL_DIGIT(date[6]) * 1000 + EVAL_DIGIT(date[7]) * 100 +
+            EVAL_DIGIT(date[8]) * 10 + EVAL_DIGIT(date[9]);
+
+    return (y - 1) * 360 + (m - 1) * 30 + (d - 1);
+}
+
+int compose_key(int id, char *date) {
+    if (fd_days == -1)
+        fd_days = date_to_days(FIRST_DATE);
+    int days_offset = date_to_days(date) - fd_days;
+
+    return days_offset * 10000 + id;
+}
+
+int get_age_group(int age) {
+    if (age < 20) return 0;
+    if (age < 40) return 1;
+    if (age < 60) return 2;
+    return 3;
 }

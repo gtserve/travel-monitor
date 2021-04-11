@@ -44,27 +44,28 @@ VirusInfo *vir_create(char *name, unsigned int bloom_size, unsigned int exp_reco
     v_info->name = (char *) malloc(sizeof(char) * (strlen(name) + 1));
     strcpy(v_info->name, name);
     v_info->filter = blf_create(exp_records, bloom_size);
-    v_info->vaccinated_list = skl_create();
-    v_info->not_vaccinated_list = skl_create();
+    v_info->vaccinated = skl_create();
+    v_info->not_vaccinated = skl_create();
+    v_info->vaccinations_by_date = skl_create();
 
     return v_info;
 }
 
 void vir_insert(VirusInfo *virus, CitizenType *citizen, int vaccinated) {
     if (vaccinated == 0) {
-        skl_insert(virus->not_vaccinated_list, citizen->id, citizen);
+        skl_insert(virus->not_vaccinated, citizen->id, citizen);
     } else {
         blf_add(virus->filter, citizen->id);
-        skl_insert(virus->vaccinated_list, citizen->id, citizen);
+        skl_insert(virus->vaccinated, citizen->id, citizen);
     }
 }
 
 void vir_vaccinate(VirusInfo *virus, CitizenType *citizen) {
-    if (skl_search(virus->vaccinated_list, citizen->id)) {
+    if (skl_search(virus->vaccinated, citizen->id)) {
         printf("ERROR: Vaccinated!\n");
     } else {
-        if (skl_search(virus->not_vaccinated_list, citizen->id)) {
-            skl_delete(virus->not_vaccinated_list, citizen->id);
+        if (skl_search(virus->not_vaccinated, citizen->id)) {
+            skl_delete(virus->not_vaccinated, citizen->id);
         }
         vir_insert(virus, citizen, 1);
     }
@@ -73,8 +74,9 @@ void vir_vaccinate(VirusInfo *virus, CitizenType *citizen) {
 void vir_destroy(VirusInfo **virus) {
     free((*virus)->name);
     blf_destroy(&(*virus)->filter);
-    skl_destroy_all(&(*virus)->vaccinated_list, (FP_item_free) vac_destroy);
-    skl_destroy(&(*virus)->not_vaccinated_list);
+    skl_destroy_all(&(*virus)->vaccinated, (FP_item_free) vac_destroy);
+    skl_destroy(&(*virus)->not_vaccinated);
+    skl_destroy(&(*virus)->vaccinations_by_date);
     free(*virus);
     *virus = NULL;
 }

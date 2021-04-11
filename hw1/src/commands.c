@@ -49,7 +49,7 @@ int vaccine_status(GeneralData *data, int citizen_id, char *virus_name) {
     if (virus_name) {
         VirusInfo *virus = htb_search(data->viruses, virus_name, STR_BYTES(virus_name));
         if (virus) {
-            VaccinationType *vaccination = skl_search(virus->vaccinated_list, citizen_id);
+            VaccinationType *vaccination = skl_search(virus->vaccinated, citizen_id);
             if (vaccination) {
                 printf("VACCINATED ON %s\n", vaccination->date);
             } else {
@@ -64,11 +64,11 @@ int vaccine_status(GeneralData *data, int citizen_id, char *virus_name) {
 
         VirusInfo *virus = NULL;
         while ((virus = htb_iter_next(iter))) {
-            VaccinationType *vaccination = skl_search(virus->vaccinated_list, citizen_id);
+            VaccinationType *vaccination = skl_search(virus->vaccinated, citizen_id);
             if (vaccination) {
                 printf("%s YES %s\n", virus->name, vaccination->date);
             } else {
-                citizen = skl_search(virus->not_vaccinated_list, citizen_id);
+                citizen = skl_search(virus->not_vaccinated, citizen_id);
                 if (citizen) {
                     printf("%s NO\n", virus->name);
                 }
@@ -80,6 +80,141 @@ int vaccine_status(GeneralData *data, int citizen_id, char *virus_name) {
     return 0;
 }
 
+int populationStatus(GeneralData *data, char *country_name, char *virus_name,
+                     char *date1, char *date2) {
+
+    VirusInfo *virus = htb_search(data->viruses, virus_name, STR_BYTES(virus_name));
+    if (!virus) {
+        fprintf(stderr, "ERROR: VIRUS '%s' NOT IN DATA\n", virus_name);
+        return -1;
+    }
+
+    int date1_key = compose_key(0, date1);
+    int date2_key = compose_key(9999, date2);
+
+    HashTable *country_vacc = htb_create(10);
+
+    SLNode *cur_node = skl_get_next_node(virus->vaccinations_by_date, date1_key);
+    while (cur_node->key <= date2_key) {
+        CitizenType *citizen = cur_node->item;
+        CountryType *country = citizen->country;
+
+        if ((country_name) && !STR_EQUALS(country_name, country->name)) {
+            cur_node = cur_node->next[0];
+            continue;
+        }
+
+        int *vacc_count = htb_search(country_vacc, country->name,
+                                     STR_BYTES(country->name));
+        if (!vacc_count) {
+            vacc_count = malloc(sizeof(int));
+            *vacc_count = 1;
+            htb_insert(country_vacc, country->name,
+                       STR_BYTES(country->name), vacc_count);
+        } else {
+            (*vacc_count)++;
+        }
+
+        cur_node = cur_node->next[0];
+    }
+
+    if ((country_name) && !(htb_search(country_vacc, country_name,
+                                       STR_BYTES(country_name)))) {
+        printf("%s 0 0.00%%\n", country_name);
+    }
+
+    HT_Iterator *iter = htb_iter_create(country_vacc);
+
+    EntryType *cur_entry = NULL;
+    while ((cur_entry = htb_iter_next_entry(iter))) {
+        char *c_name = cur_entry->key;
+        int *c_vacc_count = cur_entry->item;
+        CountryType *cur_country = htb_search(data->countries, c_name,
+                                              STR_BYTES(c_name));
+        double vacc_per = 100 * (*c_vacc_count /(double) cur_country->population);
+        printf("%s %d %.2lf%% \n", c_name, *c_vacc_count, vacc_per);
+    }
+
+    htb_iter_destroy(&iter);
+
+    htb_destroy(&country_vacc, 1);
+    return 0;
+}
+
+int popStatusByAge(GeneralData *data, char *country_name, char *virus_name,
+                   char *date1, char *date2) {
+
+    VirusInfo *virus = htb_search(data->viruses, virus_name, STR_BYTES(virus_name));
+    if (!virus) {
+        fprintf(stderr, "ERROR: VIRUS '%s' NOT IN DATA\n", virus_name);
+        return -1;
+    }
+
+    int date1_key = compose_key(0, date1);
+    int date2_key = compose_key(9999, date2);
+
+    HashTable *country_vacc = htb_create(10);
+
+    SLNode *cur_node = skl_get_next_node(virus->vaccinations_by_date, date1_key);
+    while (cur_node->key <= date2_key) {
+        CitizenType *citizen = cur_node->item;
+        CountryType *country = citizen->country;
+
+        if ((country_name) && !STR_EQUALS(country_name, country->name)) {
+            cur_node = cur_node->next[0];
+            continue;
+        }
+
+        int *vacc_count = htb_search(country_vacc, country->name,
+                                     STR_BYTES(country->name));
+        if (!vacc_count) {
+            vacc_count = (int *) malloc(sizeof(int) * 4);
+            for (int i = 0; i < 4; i++)
+                vacc_count[i] = 0;
+            vacc_count[get_age_group((int) citizen->age)]++;
+            htb_insert(country_vacc, country->name,
+                       STR_BYTES(country->name), vacc_count);
+        } else {
+            vacc_count[get_age_group((int) citizen->age)]++;
+        }
+
+        cur_node = cur_node->next[0];
+    }
+
+    if ((country_name) && !(htb_search(country_vacc, country_name,
+                                       STR_BYTES(country_name)))) {
+        printf("%s\n", country_name);
+        printf("0-20 0 0.00%%\n20-40 0 0.00%%\n40-60 0 0.00%%\n60+   0 0.00%%\n\n");
+    }
+
+    HT_Iterator *iter = htb_iter_create(country_vacc);
+
+    EntryType *cur_entry = NULL;
+    while ((cur_entry = htb_iter_next_entry(iter))) {
+        char *c_name = cur_entry->key;
+        int *c_vacc_count = cur_entry->item;
+        CountryType *cur_country = htb_search(data->countries, c_name,
+                                              STR_BYTES(c_name));
+
+        printf("%s\n", c_name);
+        for (int i = 0; i < 4; i++) {
+            double vacc_per = 100 * (c_vacc_count[i] /(double) cur_country->pop_by_age[i]);
+            if (i == 3) {
+                printf("60+   ");
+            } else {
+                printf("%d-%d ", i * 20, (i + 1) * 20);
+            }
+            printf("%d %.2lf%%\n", c_vacc_count[i], vacc_per);
+        }
+        printf("\n");
+    }
+
+    htb_iter_destroy(&iter);
+
+    htb_destroy(&country_vacc, 1);
+    return 0;
+
+}
 
 int insert_record(GeneralData *data, char *record) {
 
@@ -150,7 +285,7 @@ int insert_record(GeneralData *data, char *record) {
         ERROR_IN_RECORD(record, record_length);
         return -1;
     }
-    if (!str_is_alpha_or_c(token, '_')) {
+    if (!str_is_alphanum_or_c(token, '_')) {
         ERROR_IN_RECORD(record, record_length);
         return -1;
     }
@@ -199,12 +334,15 @@ int insert_record(GeneralData *data, char *record) {
             country = (CountryType *) malloc(sizeof(CountryType));
             STR_CPY(country_name, country->name);
             country->population = 0;
+            for (int i = 0; i < 4; i++)
+                country->pop_by_age[i] = 0;
 
             // Save new country
             htb_insert(data->countries, country_name,
                        STR_BYTES(country_name), country);
         }
         country->population++;
+        country->pop_by_age[get_age_group(age)]++;
 
         // Create new citizen
         citizen = (CitizenType *) malloc(sizeof(CitizenType));
@@ -241,8 +379,8 @@ int insert_record(GeneralData *data, char *record) {
         // Search virus
         virus = htb_search(data->viruses, virus_name, STR_BYTES(virus_name));
         if (virus) {
-            if (skl_search(virus->vaccinated_list, id) ||
-                skl_search(virus->not_vaccinated_list, id)) {
+            if (skl_search(virus->vaccinated, id) ||
+                skl_search(virus->not_vaccinated, id)) {
                 ERROR_IN_RECORD(record, record_length);
                 return -1;
             }
@@ -264,10 +402,11 @@ int insert_record(GeneralData *data, char *record) {
 
         // Vaccinate citizen
         blf_add(virus->filter, id);
-        skl_insert(virus->vaccinated_list, id, vaccination);
+        skl_insert(virus->vaccinated, id, vaccination);
+        skl_insert(virus->vaccinations_by_date, compose_key(id, date), citizen);
     } else {
         // Save as not-vaccinated
-        skl_insert(virus->not_vaccinated_list, id, citizen);
+        skl_insert(virus->not_vaccinated, id, citizen);
     }
 
     return 0;
@@ -285,7 +424,7 @@ int vaccinate_now(GeneralData *data, int id, char *first_name, char *last_name,
                    STR_BYTES(virus_name), virus);
     }
 
-    VaccinationType *vaccination = skl_search(virus->vaccinated_list, id);
+    VaccinationType *vaccination = skl_search(virus->vaccinated, id);
     if (vaccination) {
         printf("ERROR: CITIZEN %d ALREADY VACCINATED ON %s\n", id, vaccination->date);
         return -1;
@@ -311,9 +450,10 @@ int vaccinate_now(GeneralData *data, int id, char *first_name, char *last_name,
 
     // Vaccinate citizen
     blf_add(virus->filter, id);
-    skl_insert(virus->vaccinated_list, id, vaccination);
-    if (skl_search(virus->not_vaccinated_list, citizen->id)) {
-        skl_delete(virus->not_vaccinated_list, citizen->id);
+    skl_insert(virus->vaccinated, id, vaccination);
+    skl_insert(virus->vaccinations_by_date, compose_key(id, todays_date), citizen);
+    if (skl_search(virus->not_vaccinated, citizen->id)) {
+        skl_delete(virus->not_vaccinated, citizen->id);
     }
     free(todays_date);
 
@@ -328,7 +468,7 @@ int list_not_vaccinated(GeneralData *data, char *virus_name) {
     }
 
     CitizenType *citizen = NULL;
-    SLNode *cur_node = virus->not_vaccinated_list->heads[0];
+    SLNode *cur_node = virus->not_vaccinated->heads[0];
     while (cur_node) {
         citizen = cur_node->item;
         printf("%d %s %s %s %d\n", citizen->id, citizen->first_name, citizen->last_name,
