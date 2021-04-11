@@ -102,14 +102,26 @@ i_file="input.txt"
 if [[ -e "$i_file" ]]; then rm -f "$i_file"; fi
 touch "$i_file"
 
-if [[ "$dupl_flag" -eq 0 ]];
-    then
-    id_array=($(seq "$MAX_ID" | shuf))
-    else
-    num_duplicates=$((1 + (num_records / 10) + (RANDOM % (num_records / 10))))
-    id_array=($(seq "$MAX_ID" | shuf | head -n $((num_records - num_duplicates))))
-    id_array+=($(printf '%s\n' "${id_array[@]}" | shuf | head -n "$num_duplicates"))
-    id_array=($(printf '%s\n' "${id_array[@]}" | shuf ))
+declare -a id_array
+num=0
+while [ "$num" -lt "$num_records" ]; do
+    id_array+=($(seq "$MAX_ID"))
+    num=$((num + "$MAX_ID"))
+done
+id_array=($(printf '%s\n' "${id_array[@]}" | shuf | head -n "$num_records"))
+
+
+if [[ "$dupl_flag" -eq 1 ]]; then
+    num_duplicates=$((1 + (num_records / 10) + (RANDOM % (num_records / 2))))
+    while [[ "$num_duplicates" -gt 0 ]]; do
+        i=$((RANDOM % num_records))
+        j=$((RANDOM % num_records))
+        id_array[i]="${id_array[j]}"
+        num_duplicates=$((num_duplicates - 1))
+    done
+#    id_array=($(seq "$MAX_ID" | shuf | head -n $((num_records - num_duplicates))))
+#    id_array+=($(printf '%s\n' "${id_array[@]}" | shuf | head -n "$num_duplicates"))
+#    id_array=($(printf '%s\n' "${id_array[@]}" | shuf))
 fi
 
 index=0
@@ -156,6 +168,6 @@ while [[ "$index" -lt "$num_records" ]]; do
     index=$((index + 1))
 done
 
-echo -n "$records" >> input.txt
+echo -n "$records" >>input.txt
 
 exit 0
