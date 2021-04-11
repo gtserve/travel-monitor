@@ -113,6 +113,7 @@ if [[ "$dupl_flag" -eq 0 ]];
 fi
 
 index=0
+records=""
 while [[ "$index" -lt "$num_records" ]]; do
 
     # Get a random citizen_id between [0 - MAX_ID]
@@ -151,8 +152,10 @@ while [[ "$index" -lt "$num_records" ]]; do
         record="$record NO"
     fi
 
-    echo "$record" >>input.txt
+    records+="${record}"$'\n'
     index=$((index + 1))
 done
+
+echo -n "$records" >> input.txt
 
 exit 0
