@@ -17,8 +17,7 @@ add_executable(
         include/bitarray.h
         include/hashtable.h
         include/data.h
-        include/hash.h
-        include/common.h src/commands.c include/commands.h src/handler.c include/handler.h)
+        include/hash.h src/commands.c include/commands.h src/handler.c include/handler.h)
 
 add_executable(
         test_bit_array
