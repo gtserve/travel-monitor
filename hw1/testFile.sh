@@ -33,8 +33,6 @@ if [[ "$#" -ne 4 ]]; then
     exit "$ERR_NUM_ARGS"
 fi
 
-# TODO: Check arguments' type.
-
 # Check that the files exist and are readable.
 if [[ ! -e "$1" ]] || [[ ! -f "$1" ]]; then
     echo "Error: File '$1' does not exits."
