@@ -10,7 +10,7 @@
 #ifndef HW_SYSPRO_BLOOMFILTER_H
 #define HW_SYSPRO_BLOOMFILTER_H
 
-#include "bitarray.h"
+#include "../../../data-structures/hash-table/bitarray.h"
 
 
 /* ---------------------------- Data Types ---------------------------------- */

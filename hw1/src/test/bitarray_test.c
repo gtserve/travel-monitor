@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "../../include/bitarray.h"
+#include "../../../../data-structures/hash-table/bitarray.h"
 
 #define TESTS 8
 #define SIZE 10

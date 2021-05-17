@@ -14,7 +14,7 @@ add_executable(
         include/util.h
         include/bloomfilter.h
         include/skiplist.h
-        include/bitarray.h
+        ../../data-structures/hash-table/bitarray.h
         include/hashtable.h
         include/data.h
         include/hash.h src/commands.c include/commands.h src/handler.c include/handler.h)
@@ -22,7 +22,7 @@ add_executable(
 add_executable(
         test_bit_array
         src/test/bitarray_test.c
-        include/bitarray.h
+        ../../data-structures/hash-table/bitarray.h
 )
 
 add_executable(
@@ -31,7 +31,7 @@ add_executable(
         src/bloomfilter.c
         src/hash.c
         include/bloomfilter.h
-        include/bitarray.h
+        ../../data-structures/hash-table/bitarray.h
         include/hash.h
 )
 
@@ -44,7 +44,7 @@ add_executable(
 
 add_executable(
         test_hash_table
-        src/test/hashtable_test.c
+        ../../data-structures/hash-table/test/hashtable_test.c
         src/hashtable.c
         src/hash.c
         include/hashtable.h
