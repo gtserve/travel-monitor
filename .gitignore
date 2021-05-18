@@ -6,6 +6,9 @@ cmake-build-debug
 build
 
 # Executables
+vaccineMonitor
+travelMonitor
+
 ./build
 *.exe
 *.out
