@@ -6,8 +6,8 @@
 # email:    sdi1500164@di.uoa.gr
 # -------------------------------------------------------------------------------------------------
 
-
-SRC = $(wildcard ./src/*.c)
+SRC = src/travelmonitor.c src/util.c
+#SRC = $(wildcard ./src/*.c)
 EXE = travelMonitor
 CC  = gcc
 CFL = -O2 -g -Wall -Werror
