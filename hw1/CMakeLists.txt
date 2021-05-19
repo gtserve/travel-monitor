@@ -42,19 +42,19 @@ add_executable(
         include/skiplist.h
 )
 
-add_executable(
-        test_hash_table
-        ../../data-structures/hash-table/test/hashtable_test.c
-        src/hashtable.c
-        src/hash.c
-        include/hashtable.h
-        include/hash.h
-)
+#add_executable(
+#        test_hash_table
+#        ../../data-structures/hash-table/test/hashtable_test.c
+#        src/hashtable.c
+#        src/hash.c
+#        include/hashtable.h
+#        include/hash.h
+#)
 
 target_link_libraries(vaccine_monitor -lm)
 
 target_link_libraries(test_skip_list -lm)
 
-target_link_libraries(test_hash_table -lm)
+#target_link_libraries(test_hash_table -lm)
 
 target_link_libraries(test_bloom_filter -lm -lcrypto)
