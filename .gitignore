@@ -8,6 +8,7 @@ build
 # Executables
 vaccineMonitor
 travelMonitor
+monitor
 
 ./build
 *.exe
