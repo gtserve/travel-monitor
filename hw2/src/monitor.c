@@ -19,8 +19,6 @@
 
 int BUFFER_SIZE;
 
-void get_subdirectories(PipeChannel *pc, char ***dirs);
-
 
 int main(int argc, char *argv[]) {
     PipeChannel pc;
@@ -41,11 +39,13 @@ int main(int argc, char *argv[]) {
         exit(-1);
     }
 
-    char **dirs = NULL;
+    char **dir_names = NULL;
+    int num_dirs = get_subdirectories(&pc, &dir_names, id);
 
-//    printf("M%d: before dirs\n", id);
-
-    get_subdirectories(&pc, &dirs);
+    printf("M%d: Countries[%d]= ", id, num_dirs);
+    for (int i = 0; i < num_dirs; i++)
+        printf("%s ", dir_names[i]);
+    printf("\n");
 
 //    struct pollfd pfds[1];
 //    pfds[0].fd = pc.reader_fd;
@@ -64,17 +64,11 @@ int main(int argc, char *argv[]) {
     close(pc.reader_fd);
     close(pc.writer_fd);
 
+    for (int i = 0; i < num_dirs; i++)
+        free(dir_names[i]);
+    free(dir_names);
+
     printf("M%d: DONE!\n", id);
 
     return 0;
-}
-
-void get_subdirectories(PipeChannel *pc, char ***dirs) {
-
-    char *buffer;
-    msg_get(&buffer, pc->reader_fd);
-
-    printf("M: %s\n", buffer);
-
-    free(buffer);
 }

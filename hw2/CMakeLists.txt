@@ -14,4 +14,4 @@ add_executable(
         monitor
         src/monitor.c
         src/msg.c
-        )
+)

@@ -28,7 +28,7 @@
 #define PATH_SIZE 255
 #define PIPE_PERMS 0666
 #define MNTR_ID_SIZE 20
-#define SEP_TOKEN "$"
+
 
 typedef struct {
     int num_monitors;
@@ -38,8 +38,6 @@ typedef struct {
 } ProgArguments;
 
 void usage(char *prog_name);
-
-void send_subdirectories(char *in_dir_name, int num_monitors, PipeChannel *pc);
 
 int BUFFER_SIZE;
 
@@ -103,9 +101,12 @@ int main(int argc, char **argv) {
     BUFFER_SIZE = p_args.buffer_size;
 
     char m_path[PATH_SIZE];
-    getcwd(m_path, PATH_SIZE);
+    if (getcwd(m_path, PATH_SIZE) == NULL) {
+        perror("getcwd");
+        exit(-1);
+    }
     strcpy(m_path + strlen(m_path), "/monitor");
-    printf("[INFO] Monitor path: '%s'\n", m_path);
+//    printf("[INFO] Monitor path: '%s'\n", m_path);
 
     // Create Monitor arguments
     char *m_args[5];
@@ -169,9 +170,13 @@ int main(int argc, char **argv) {
         pfds[i].events = POLLIN;
     }
 
-    send_subdirectories(p_args.input_dir, p_args.num_monitors, pipe_channels);
+    send_directories(p_args.input_dir, p_args.num_monitors, pipe_channels);
 
-//    sleep(10);
+//    char **dir_names = NULL;
+//
+//    get_subdirectories(pipe_channels[0], &dir_names, 0);
+
+//    sleep(5);
 
 //    for (int i = 0; i < p_args.num_monitors; i++) {
 //        char buffer[100] = "TM";
@@ -219,53 +224,4 @@ int main(int argc, char **argv) {
 void usage(char *prog_name) {
     fprintf(stderr, USAGE_STR, (prog_name ? prog_name : PROG_NAME));
     exit(EXIT_FAILURE);
-}
-
-void send_subdirectories(char *in_dir_name, int num_monitors, PipeChannel *pc) {
-
-    DIR* in_dir;
-    if (!(in_dir = opendir(in_dir_name))) {
-        perror("Open Directory");
-        exit(-1);
-    }
-
-    struct dirent *dent;
-
-
-    int *sizes = (int *) calloc(num_monitors, sizeof(int));
-    int i = 0;
-    while ((dent = readdir(in_dir)) != NULL) {
-        if (strcmp(dent->d_name, ".") == 0 || strcmp(dent->d_name, "..") == 0)
-            continue;
-
-        sizes[i % num_monitors] = (int) strlen(dent->d_name) + 2;
-        i++;
-    }
-
-    char **dir_strs = (char **) calloc(num_monitors, 1);
-    for (int j = 0; j < num_monitors; j++)
-        dir_strs[j] = (char *) calloc(sizes[j], 1);
-
-    rewinddir(in_dir);
-
-    i = 0;
-    while ((dent = readdir(in_dir)) != NULL) {
-        if (strcmp(dent->d_name, ".") == 0 || strcmp(dent->d_name, "..") == 0)
-            continue;
-
-        strcat(dir_strs[i % num_monitors], dent->d_name);
-        strcat(dir_strs[i % num_monitors], SEP_TOKEN);
-        i++;
-    }
-
-    for (int j = 0; j < num_monitors; j++) {
-        msg_send(dir_strs[j], (int) strlen(dir_strs[j]) + 1, pc[j].writer_fd);
-//        msg_send("ASD", 4, pc[j].writer_fd);
-    }
-
-    for (int j = 0; j < num_monitors; j++) {
-        free(dir_strs[j]);
-    }
-    free(dir_strs);
-    free(sizes);
 }
