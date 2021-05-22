@@ -37,11 +37,11 @@ fi
 
 # Check that the files exist and are readable.
 if [[ ! -e "$1" ]] || [[ ! -f "$1" ]]; then
-    echo "Error: File '$1' does not exits."
+    echo "Error: File '$1' does not exists."
     exit "$ERR_FILE_IO"
 fi
 if [[ ! -e "$2" ]] || [[ ! -f "$2" ]]; then
-    echo "Error: File '$2' does not exits."
+    echo "Error: File '$2' does not exists."
     exit "$ERR_FILE_IO"
 fi
 if [[ ! -r "$1" ]]; then
@@ -105,8 +105,8 @@ touch "$i_file"
 declare -a id_array
 num=0
 while [ "$num" -lt "$num_records" ]; do
-    id_array+=($(seq 0 $(("$MAX_ID" - 1))))
-    num=$((num + "$MAX_ID"))
+    id_array+=($(seq 0 $((MAX_ID - 1))))
+    num=$((num + MAX_ID))
 done
 id_array=($(printf '%s\n' "${id_array[@]}" | shuf | head -n "$num_records"))
 
@@ -129,26 +129,26 @@ records=""
 while [[ "$index" -lt "$num_records" ]]; do
 
     # Get a random citizen_id between [0 - MAX_ID]
-    citizen_id="${id_array["$index"]}"
+    citizen_id="${id_array[$index]}"
 
     # Get a random first name from array.
     i=$((RANDOM % num_names))
-    name="${name_array["$i"]}"
+    name="${name_array[$i]}"
 
     # Get a random surname from array.
     i=$((RANDOM % num_surnames))
-    surname="${surname_array["$i"]}"
+    surname="${surname_array[$i]}"
 
     # Get a random country from array.
     i=$((RANDOM % num_countries))
-    country="${country_array["$i"]}"
+    country="${country_array[$i]}"
 
     # Get random age between [0 - 120]
     age=$((RANDOM % 121))
 
     # Get a random virus from array.
     i=$((RANDOM % num_viruses))
-    virus="${virus_array["$i"]}"
+    virus="${virus_array[$i]}"
 
     record="$citizen_id $name $surname $country $age $virus"
 
@@ -168,6 +168,6 @@ while [[ "$index" -lt "$num_records" ]]; do
     index=$((index + 1))
 done
 
-echo -n "$records" >>input.txt
+echo -n "$records" >>"$i_file"
 
 exit 0
