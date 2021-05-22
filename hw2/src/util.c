@@ -11,6 +11,7 @@
 #include <time.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <dirent.h>
 
 #include "../include/util.h"
 
@@ -99,3 +100,24 @@ int get_age_group(int age) {
     if (age < 60) return 2;
     return 3;
 }
+
+/* File operations */
+
+int count_files(char *dir_name) {
+    int num_files = 0;
+
+    DIR* dir = NULL;
+    if ((dir = opendir(dir_name)) == NULL) {
+        perror(dir_name);
+        exit(-1);
+    }
+
+    struct dirent *dent = NULL;
+    for (int j = 0; ((dent = readdir(dir)) != NULL); j++) {
+        if (dent->d_type == DT_REG)
+            num_files++;
+    }
+
+    return num_files;
+}
+

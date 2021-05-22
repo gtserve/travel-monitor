@@ -1,0 +1,5 @@
+3582 Estelle Reed Botswana 28 Influenza YES 28-7-1833
+6635 Dorothy Bray Nicaragua 87 Rubella NO
+6607 Jaclyn Rangel Costa_Rica 12 Japanese_Encephalitis YES 10-9-1796
+5076 Ula Mullins Honduras 29 Influenza YES 9-5-1885
+885 Leslee Everett Russia 100 Varicella_zoster NO

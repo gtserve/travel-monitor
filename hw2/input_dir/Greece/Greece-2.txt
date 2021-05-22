@@ -1,0 +1,5 @@
+876 Enola Hood Cambodia 52 Hepatitis_E YES 8-2-1923
+677 Kirstin Perkins Czech_Republic 113 Hepatitis_A YES 29-1-1895
+7538 Nakia Buchanan Cuba 78 Hepatitis_B YES 2-6-1956
+6118 Daniella Bell Kosovo 95 Tick_borne_Encephalitis YES 4-1-1890
+3587 Wilson Buchanan Albania 35 Rabies NO

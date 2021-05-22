@@ -1,0 +1,5 @@
+7155 Coleman Murray Nigeria 111 Rubella YES 27-1-1881
+5599 Jarvis Reyes Belgium 54 Hepatitis_A NO
+9369 Gretta Moses Democratic_Republic_of_the_Congo 8 Yellow_Fever NO
+2633 Maurice Weiss Burkina_Faso 75 Polio YES 21-5-1845
+108 Selena Perkins Italy 120 Yellow_Fever YES 25-9-1859

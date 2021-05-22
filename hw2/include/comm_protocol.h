@@ -1,4 +1,4 @@
-/* pipe.h
+/* comm_protocol.h
 * -------------------------------------------------------------------------------------------------
 * course:   System Programming
 * project:  (#2) Travel Monitor
@@ -7,16 +7,16 @@
 * -------------------------------------------------------------------------------------------------
 */
 
-#ifndef SYSPRO_HW2_PIPE_H
-#define SYSPRO_HW2_PIPE_H
+#ifndef SYSPRO_HW2_COMM_PROTOCOL_H
+#define SYSPRO_HW2_COMM_PROTOCOL_H
 
-#define PIPE_NAME_SIZE 32
+#define SEP_TOKEN "#"
 
-typedef struct {
-    int reader_fd;
-    int writer_fd;
-    char reader_name[PIPE_NAME_SIZE];
-    char writer_name[PIPE_NAME_SIZE];
-} PipeChannel;
+typedef enum {CDIR, BFILTER, CDIRS_DONE} OP_CODE;
 
-#endif //SYSPRO_HW2_PIPE_H
+int encode_str(OP_CODE code, char *str, char **message);
+
+OP_CODE decode_op(char **message);
+
+
+#endif //SYSPRO_HW2_COMM_PROTOCOL_H

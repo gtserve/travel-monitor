@@ -1,0 +1,5 @@
+9807 Eric Lyons Tonga 110 Rabies YES 22-12-1997
+5581 Luke Yoder Nepal 5 Japanese_Encephalitis YES 20-1-1847
+6143 Diego Short Dominica 18 Tick_borne_Encephalitis YES 16-9-1974
+782 Mellisa Love Kuwait 86 Variolla YES 10-9-1992
+255 Leeanne Fernandez Benin 114 Yellow_Fever NO

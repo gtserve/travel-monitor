@@ -1,4 +1,4 @@
-/* comm.h
+/* msg.h
 * -------------------------------------------------------------------------------------------------
 * course:   System Programming
 * project:  (#2) Travel Monitor
@@ -12,27 +12,21 @@
 
 #include "pipe.h"
 
-#define PKG_SIZE 256
 #define PIPE_PATH "/tmp"
 
 typedef struct {
-    int bytes;
-    char message[PKG_SIZE];
-} Package;
-
-
-typedef struct {
     int num_packages;
-    int msg_bytes;
+    int payload_bytes;
 } MessageHeader;
 
 
-void msg_send(char *message, int bytes, int pipe_fd);
+void msg_send(int pipe_fd, int pkg_size, char *payload, int payload_bytes);
 
-void msg_get(char **message, int pipe_fd);
+int msg_get(int pipe_fd, int pkg_size, char **payload);
 
-void send_directories(char *in_dir_name, int num_monitors, PipeChannel *pc);
+void safe_write(int fd, const void *buffer, size_t bytes);
 
-int get_subdirectories(PipeChannel *pc, char ***dir_names, int monitor_id);
+void safe_read(int fd, void *buffer, size_t bytes);
+
 
 #endif //SYSPRO_HW2_MSG_H

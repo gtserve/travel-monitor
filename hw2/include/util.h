@@ -53,6 +53,8 @@
     }                                           \
 }
 
+#define PATH_SIZE 256
+//#define SEP_TOKEN "$"
 #define TOK_DELIM " \n"
 
 // String Operations
@@ -89,5 +91,9 @@ int date_to_days(char *date);
 int compose_key(int id, char *date);
 
 int get_age_group(int age);
+
+/* File operations */
+
+int count_files(char *dir_name);
 
 #endif //SYSPRO_HW1_UTIL_H
