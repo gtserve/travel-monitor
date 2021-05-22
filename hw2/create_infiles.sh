@@ -74,7 +74,6 @@ IFS=' '
 
 # Get unique countries from records.
 declare -A countries_records
-num_records=0
 while read -r record; do
     # Get country from each record.
     read -a word_array <<<"$record"
@@ -94,17 +93,17 @@ while read -r record; do
 
     # Save record
     countries_records["$country"]+="$record"$'~'
-
-    num_records=$((num_records + 1))
 done <"$input_file"
 
+#exit 20
+
 IFS='~'
+declare -A file_records
 for country in "${!countries_records[@]}"; do
     # Get records
     read -a records_array <<<"${countries_records["$country"]}"
 
     # Distribute records in round-robin fashion.
-    declare -A file_records
     i=0
     while [[ "$i" -lt "$num_files_per_dir" ]]; do
         file_records["$i"]=""
