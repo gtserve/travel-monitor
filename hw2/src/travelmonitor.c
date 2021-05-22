@@ -219,6 +219,7 @@ int main(int argc, char **argv) {
         int msg_bytes = encode_str(CDIR, dent->d_name, &message);
         msg_send(pipe_channels[i % p_args.num_monitors].writer_fd,
                  p_args.buffer_size, message, msg_bytes);
+        free(message);
 
         // Create new country
         CountryType *country = (CountryType *) malloc(sizeof(CountryType));
@@ -236,6 +237,7 @@ int main(int argc, char **argv) {
         char *buffer = "DONE";
         int msg_bytes = encode_str(CDIRS_DONE, buffer, &message);
         msg_send(pipe_channels[i].writer_fd, p_args.buffer_size, message, msg_bytes);
+        free(message);
     }
 
     // Wait for children
@@ -280,12 +282,16 @@ int main(int argc, char **argv) {
         }
     }
 
+    // Destroy Monitor arguments.
     for (int i = 0; i < num_m_args; i++)
         free(m_args[i]);
 
+    // Destroy Monitor data.
     for (int i = 0; i < p_args.num_monitors; i++)
         mtr_destroy(&(tm_data[i]));
+    free(tm_data);
 
+    // Destroy Monitor pids array.
     free(monitor_pids);
 
     printf("[TM]: DONE!\n");

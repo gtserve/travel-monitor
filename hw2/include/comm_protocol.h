@@ -14,9 +14,9 @@
 
 typedef enum {CDIR, BFILTER, CDIRS_DONE} OP_CODE;
 
-int encode_str(OP_CODE code, char *str, char **message);
+int encode_str(OP_CODE code, char *str, char **payload);
 
-OP_CODE decode_op(char **message);
+OP_CODE decode_op(char **payload);
 
 
 #endif //SYSPRO_HW2_COMM_PROTOCOL_H

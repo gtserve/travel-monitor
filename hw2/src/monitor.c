@@ -32,7 +32,7 @@ int get_directories(PipeChannel pc, char ***dir_names, int monitor_id);
 
 void send_filters(MonitorData *gen_data, PipeChannel pc, int bloom_size, int monitor_id);
 
-void monitor_op_handler(OP_CODE op_code, char *payload);
+void op_handler(OP_CODE code, char *payload);
 
 void process_dir(char *dir_name);
 
@@ -72,25 +72,19 @@ int main(int argc, char *argv[]) {
         exit(-1);
     }
 
-    // Get Directories
-//    OP_CODE op_code;
-//    while ((msg_get(pc.reader_fd, mon_data->buffer_size, &payload)) &&
-//                ((op_code = decode_op(&payload)) != CDIRS_DONE)) {
-//        monitor_op_handler(op_code, payload);
-//    }
-
     struct pollfd pfds[1];
     pfds[0].fd = pc.reader_fd;
     pfds[0].events = POLLIN;
 
+    // Get Directories
     OP_CODE op_code = -1;
     while ((op_code != CDIRS_DONE) && (poll(pfds, 1, -1))) {
         if (pfds[0].revents & POLLIN) {
             char *payload = NULL;
             msg_get(pc.reader_fd, mon_data->buffer_size, &payload);
             op_code = decode_op(&payload);
-            monitor_op_handler(op_code, payload);
-            free(payload);
+            op_handler(op_code, payload);
+            //free(payload);
         }
     }
 
@@ -102,44 +96,6 @@ int main(int argc, char *argv[]) {
     htb_iter_destroy(&ht_iter);
 
 
-//    char *buffer = NULL;
-//    int msg_bytes = msg_get(pc.reader_fd, 8, &buffer);
-//
-//    printf("%s + M%d|msg.bytes= %d\n", buffer, mon_data->id, msg_bytes);
-
-
-//    // Get directories from travelmonitor
-//    char **dir_names = NULL;
-//    int num_dirs = get_directories(pc, &dir_names, mon_data->id);
-//
-//    printf("[M%d]: Countries[%d]= ", mon_data->id, num_dirs);
-//    for (int i = 0; i < num_dirs; i++)
-//        printf("%s ", dir_names[i]);
-//    printf("\n");
-//
-//    // Create data
-//    MonitorData *gen_data = gdt_create(bloom_size, 10000);
-//    for (int i = 0; i < num_dirs; i++) {
-//        DIR* dir = NULL;
-//        char dir_path[PATH_SIZE];
-//        sprintf(dir_path, "%s/%s", argv[2], dir_names[i]);
-//        if ((dir = opendir(dir_path)) == NULL) {
-//            perror(dir_path);
-//            exit(-1);
-//        }
-//
-//        char file_path[PATH_SIZE];
-//        struct dirent *dent = NULL;
-//        for (int j = 0; ((dent = readdir(dir)) != NULL); j++) {
-//            if (dent->d_type == DT_REG) {
-//                printf("[M%d]: File %s\n", mon_data->id, dent->d_name);
-//                sprintf(file_path, "%s/%s", dir_path, dent->d_name);
-//                record_parser(file_path);
-//            }
-//        }
-//        closedir(dir);
-//    }
-//
 //    send_filters(gen_data, pc, bloom_size, id);
 
 //    struct pollfd pfds[1];
@@ -158,10 +114,6 @@ int main(int argc, char *argv[]) {
 
     close(pc.reader_fd);
     close(pc.writer_fd);
-
-//    for (int i = 0; i < num_dirs; i++)
-//        free(dir_names[i]);
-//    free(dir_names);
 
     printf("[M%d]: DONE!\n", mon_data->id);
 
@@ -267,8 +219,8 @@ int main(int argc, char *argv[]) {
 //    free(filters_msg);
 //}
 
-void monitor_op_handler(OP_CODE op_code, char *payload) {
-    switch (op_code) {
+void op_handler(OP_CODE code, char *payload) {
+    switch (code) {
         case CDIR: {
             process_dir(payload);
         } case CDIRS_DONE: {
@@ -325,19 +277,23 @@ void process_dir(char *dir_name) {
     htb_insert(mon_data->countries, dir_name, STR_BYTES(dir_name), country);
 
     DIR* dir = NULL;
-    char dir_path[PATH_SIZE];
-    sprintf(dir_path, "%s/%s", mon_data->in_dir_path, dir_name);
+    char dir_path[PATH_SIZE] = "";
+    strcat(dir_path, mon_data->in_dir_path);
+    strcat(dir_path, "/");
+    strcat(dir_path, dir_name);
     if ((dir = opendir(dir_path)) == NULL) {
         perror(dir_path);
         exit(-1);
     }
 
-    char file_path[PATH_SIZE];
     struct dirent *dent = NULL;
     for (int j = 0; ((dent = readdir(dir)) != NULL); j++) {
         if (dent->d_type == DT_REG) {
             printf("[M%d]: File %s\n", mon_data->id, dent->d_name);
-            sprintf(file_path, "%s/%s", dir_path, dent->d_name);
+            char file_path[PATH_SIZE] = "";
+            strcat(file_path, dir_path);
+            strcat(file_path, "/");
+            strcat(file_path, dent->d_name);
             record_parser(file_path);
         }
     }
