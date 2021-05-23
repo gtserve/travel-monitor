@@ -13,6 +13,7 @@
 #include "hashtable.h"
 #include "bloomfilter.h"
 #include "skiplist.h"
+#include "pipe.h"
 
 
 /* -------------------------------------- Data Types -------------------------------------------- */
@@ -21,18 +22,24 @@ typedef struct {
     char *name;
     unsigned int population;
     unsigned int pop_by_age[4];
-} CountryType;
+} Country;
+
+typedef struct {
+    int answer;
+    char *date;
+    char *country_name;
+} TravelRequest;
 
 typedef struct {
     int id;
     char *first_name;
     char *last_name;
-    CountryType *country;
+    Country *country;
     unsigned int age;
-} CitizenType;
+} Citizen;
 
 typedef struct {
-    CitizenType *citizen;
+    Citizen *citizen;
     char *date;
 } VaccinationType;
 
@@ -53,6 +60,7 @@ typedef struct {
     HashTable *citizens;
     HashTable *countries;
     HashTable *viruses;
+    HashTable *parsed_files;
 } MonitorData;
 
 typedef struct {
@@ -60,18 +68,29 @@ typedef struct {
     HashTable *viruses;
     unsigned int bloom_size;
     unsigned int exp_records;
+} TM_MonitorData;
+
+typedef struct {
+    int num_monitors;
+    TM_MonitorData **mon_data;
+    PipeChannel *pipe_channels;
+    HashTable *country_to_monitor;
+    HashTable *virus_to_requests;
 } TM_Data;
 
 /* ------------------------------------ Basic Operations ---------------------------------------- */
 
+/* TravelRequest */
+void trq_destroy(TravelRequest **travel_req);
+
 /* VaccinationType */
 void vac_destroy(VaccinationType **vaccination);
 
-/* CountryType */
-void cnt_destroy(CountryType **country);
+/* Country */
+void cnt_destroy(Country **country);
 
-/* CitizenType */
-void ctz_destroy(CitizenType **citizen);
+/* Citizen */
+void ctz_destroy(Citizen **citizen);
 
 /* VirusInfo */
 VirusInfo *vir_create(char *name, unsigned int bloom_size, unsigned int exp_records);
@@ -79,14 +98,19 @@ VirusInfo *vir_create(char *name, unsigned int bloom_size, unsigned int exp_reco
 void vir_destroy(VirusInfo **virus);
 
 /* MonitorData */
-MonitorData *gdt_create(unsigned int bloom_size, unsigned int exp_records);
+MonitorData *mnd_create(unsigned int bloom_size, unsigned int exp_records);
 
-void gdt_destroy(MonitorData **gen_data);
+void mnd_destroy(MonitorData **gen_data);
 
-/* TravelMonitor Data */
-TM_Data *mtr_create(unsigned int bloom_size, unsigned int exp_records);
+/* TM_MonitorData */
+TM_MonitorData *tmm_create(unsigned int bloom_size, unsigned int exp_records);
 
-void mtr_destroy(TM_Data **mon_data);
+void tmm_destroy(TM_MonitorData **tmm_data);
+
+/* TM_Data */
+TM_Data *tmd_create(int num_monitors, unsigned int bloom_size, unsigned int exp_records);
+
+void tmd_destroy(TM_Data **tm_data);
 
 
 #endif //SYSPRO_HW1_DATA_H

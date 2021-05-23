@@ -11,7 +11,6 @@
 #include <malloc.h>
 #include <stdlib.h>
 
-#include "../include/monitor.h"
 #include "../include/comm_protocol.h"
 
 // OP_CODE#George#
@@ -20,22 +19,41 @@
 int encode_str(OP_CODE code, char *str, char **payload) {
 
     int str_size = (int) strlen(str);
-    int msg_bytes = (int) sizeof(OP_CODE) + 1 + str_size + 1;
+    int msg_bytes = (int) sizeof(OP_CODE) + str_size + 1;
 
-    *payload = (char *) malloc(msg_bytes + 1);
+    int offset = 0;
+    *payload = (char *) malloc(msg_bytes);
 
-    sprintf(*payload, "%d%s%s%s", code, SEP_TOKEN, str, SEP_TOKEN);
+    memcpy((*payload) + offset, &code, sizeof(OP_CODE));
+    offset += sizeof(OP_CODE);
+
+    memcpy((*payload) + offset, str, (str_size + 1));
+
+    return msg_bytes;
+}
+
+int encode_data(OP_CODE code, char *data, int data_bytes, char **payload) {
+
+    int msg_bytes = (int) sizeof(OP_CODE) + data_bytes;
+
+    int offset = 0;
+    *payload = (char *) malloc(msg_bytes);
+
+    memcpy((*payload) + offset, &code, sizeof(OP_CODE));
+    offset += sizeof(OP_CODE);
+
+    memcpy((*payload) + offset, data, data_bytes);
 
     return msg_bytes;
 }
 
 OP_CODE decode_op(char **payload) {
-    // TODO: moves pointer
 
     // Get Op. Code
-    char *op_str = strtok(*payload, SEP_TOKEN);
-    OP_CODE op_code = strtol(op_str, NULL, 10);
+    OP_CODE op_code;
+    memcpy(&op_code, (*payload), sizeof(OP_CODE));
 
-    *payload = strtok(NULL, SEP_TOKEN);
+    (*payload) += sizeof(OP_CODE);
+
     return op_code;
 }

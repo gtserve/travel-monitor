@@ -92,8 +92,5 @@ int compose_key(int id, char *date);
 
 int get_age_group(int age);
 
-/* File operations */
-
-int count_files(char *dir_name);
 
 #endif //SYSPRO_HW1_UTIL_H

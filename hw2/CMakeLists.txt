@@ -15,6 +15,7 @@ add_executable(
         src/bloomfilter.c
         src/skiplist.c
         src/comm_protocol.c
+        src/handler.c
 )
 
 add_executable(
@@ -29,9 +30,7 @@ add_executable(
         src/bloomfilter.c
         src/skiplist.c
         src/comm_protocol.c
-)
-
-add_executable(test src/test/test.c src/util.c)
+        include/travelmonitor.h)
 
 target_link_libraries(travel_monitor -lm)
 

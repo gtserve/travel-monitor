@@ -10,8 +10,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <openssl/md5.h>
-#include <openssl/sha.h>
 
 #include "../include/hash.h"
 #include "../include/bloomfilter.h"
@@ -28,6 +26,9 @@ BloomFilter *blf_create(unsigned int n, unsigned int m) {
     // Calculate the required m bits and k hash functions.
     filter->m_bits = m;
     filter->k_hash = (int) round((m /(double ) n) * log(2));
+
+    if (filter->k_hash == 0)
+        filter->k_hash = 1;
 
 //    filter->m_bits = (int) (ceil(-(n * log(m)) / (pow(log(2), 2))));
 //    filter->k_hash = (int) round(-log2(m));

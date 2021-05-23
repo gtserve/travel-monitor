@@ -13,6 +13,9 @@
 
 #include "../include/util.h"
 #include "../include/skiplist.h"
+#include "../include/data.h"
+
+void trq_destroy(TravelRequest **travel_req);
 
 
 /* -------------------------- Auxiliary Functions --------------------------- */
@@ -55,6 +58,20 @@ void skl_destroy_nodes_all(SLNode *node, FP_item_free item_free) {
     // Destroy node.
     free(node->next);
     item_free(&node->item);
+    free(node);
+}
+
+void skl_destroy_nodes_req(SLNode *node) {
+    /* Destroy all SLNodes recursively. */
+
+    ERR_CHECK_NULL(node, "ERROR: [SL] destroy_nodes(): null node.\n");
+
+    if (node->next[0] != NULL)
+        skl_destroy_nodes(node->next[0]);
+
+    // Destroy node.
+    free(node->next);
+    trq_destroy(node->item);
     free(node);
 }
 
@@ -303,6 +320,21 @@ void skl_destroy_all(SkipList **list, FP_item_free item_free) {
     // Destroy all nodes traversing recursively the lowest level.
     if ((*list)->heads[0] != NULL)
         skl_destroy_nodes_all((*list)->heads[0], item_free);
+
+    // Destroy Skip List.
+    free((*list)->heads);
+    free((*list));
+    *list = NULL;
+}
+
+void skl_destroy_req(SkipList **list) {
+    /* Deallocate used space and destroy a Skip List. */
+
+    ERR_CHECK_NULL(*list, "ERROR: [SL] skl_destroy(): null list.\n");
+
+    // Destroy all nodes traversing recursively the lowest level.
+    if ((*list)->heads[0] != NULL)
+        skl_destroy_nodes_req((*list)->heads[0]);
 
     // Destroy Skip List.
     free((*list)->heads);

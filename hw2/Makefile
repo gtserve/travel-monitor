@@ -6,19 +6,24 @@
 # email:    sdi1500164@di.uoa.gr
 # -------------------------------------------------------------------------------------------------
 
-SRC = src/util.c src/msg.c
-#SRC = $(wildcard ./src/*.c)
+LS1 = ./src/travelmonitor.c ./src/monitor.c ./src/handler.c
+LS2 = ./src/travelmonitor.c ./src/monitor.c
+
+SRC1:=$(filter-out $(LS1), $(wildcard ./src/*.c))
+SRC2:=$(filter-out $(LS2), $(wildcard ./src/*.c))
+
 EXE = travelMonitor
 CC  = gcc
-CFL = -O2 -g -Wall -Werror
+CFL = -O2 -g
+LIB = -lm
 
 all: compile_monitor compile_travelmonitor
 
 compile_monitor:
-	$(CC) $(CFL) ./src/monitor.c $(SRC) -o ./monitor
+	$(CC) $(CFL) ./src/monitor.c $(SRC1) -o ./monitor $(LIB)
 
 compile_travelmonitor:
-	$(CC) $(CFL) ./src/travelmonitor.c $(SRC) -o $(EXE)
+	$(CC) $(CFL) ./src/travelmonitor.c $(SRC2) -o $(EXE) $(LIB)
 
 clean:
 	rm -f ./travelMonitor ./monitor

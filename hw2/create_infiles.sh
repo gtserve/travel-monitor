@@ -95,7 +95,7 @@ while read -r record; do
     countries_records["$country"]+="$record"$'~'
 done <"$input_file"
 
-#exit 20
+#echo "${countries_records["Norway"]}"
 
 IFS='~'
 declare -A file_records
@@ -115,10 +115,8 @@ for country in "${!countries_records[@]}"; do
     for record in "${records_array[@]}"; do
 #        echo "    $record"
         file_records["$i"]+="${record}"$'\n'
-        if [[ "$i" -lt "$num_files_per_dir" ]];
-        then
-            i=$((i + 1))
-        else
+        i=$((i + 1))
+        if [[ "$i" -eq "$num_files_per_dir" ]]; then
             i=0
         fi
     done

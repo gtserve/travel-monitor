@@ -159,7 +159,7 @@ while [[ "$index" -lt "$num_records" ]]; do
         year=$((1796 + (RANDOM % 225))) # 1796 - 2021
         month=$((1 + (RANDOM % 12)))    # 1 - 12
         day=$((1 + (RANDOM % 30)))      # 1 - 30
-        record="$record YES $day-$month-$year"
+        record=$(printf "%s YES %02d-%02d-%04d" "$record" "$day" "$month" "$year")
     else
         record="$record NO"
     fi

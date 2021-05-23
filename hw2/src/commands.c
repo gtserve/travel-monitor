@@ -41,7 +41,7 @@ int vaccine_status_bloom(MonitorData *data, int citizen_id, char *virus_name) {
 }
 
 //int vaccine_status(MonitorData *data, int citizen_id, char *virus_name) {
-//    CitizenType *citizen = htb_search(data->citizens, &citizen_id, sizeof(int));
+//    Citizen *citizen = htb_search(data->citizens, &citizen_id, sizeof(int));
 //    if (!citizen) {
 //        fprintf(stderr, "ERROR: CITIZEN WITH ID %d NOT IN DATA\n", citizen_id);
 //        return -1;
@@ -97,8 +97,8 @@ int vaccine_status_bloom(MonitorData *data, int citizen_id, char *virus_name) {
 //
 //    SLNode *cur_node = skl_get_next_node(virus->vaccinations_by_date, date1_key);
 //    while (cur_node->key <= date2_key) {
-//        CitizenType *citizen = cur_node->item;
-//        CountryType *country = citizen->country;
+//        Citizen *citizen = cur_node->item;
+//        Country *country = citizen->country;
 //
 //        if ((country_name) && !STR_EQUALS(country_name, country->name)) {
 //            cur_node = cur_node->next[0];
@@ -130,7 +130,7 @@ int vaccine_status_bloom(MonitorData *data, int citizen_id, char *virus_name) {
 //    while ((cur_entry = htb_iter_next_entry(iter))) {
 //        char *c_name = cur_entry->key;
 //        int *c_vacc_count = cur_entry->item;
-//        CountryType *cur_country = htb_search(data->countries, c_name,
+//        Country *cur_country = htb_search(data->countries, c_name,
 //                                              STR_BYTES(c_name));
 //        double vacc_per = 100 * (*c_vacc_count /(double) cur_country->population);
 //        printf("%s %d %.2lf%% \n", c_name, *c_vacc_count, vacc_per);
@@ -158,8 +158,8 @@ int vaccine_status_bloom(MonitorData *data, int citizen_id, char *virus_name) {
 //
 //    SLNode *cur_node = skl_get_next_node(virus->vaccinations_by_date, date1_key);
 //    while (cur_node->key <= date2_key) {
-//        CitizenType *citizen = cur_node->item;
-//        CountryType *country = citizen->country;
+//        Citizen *citizen = cur_node->item;
+//        Country *country = citizen->country;
 //
 //        if ((country_name) && !STR_EQUALS(country_name, country->name)) {
 //            cur_node = cur_node->next[0];
@@ -194,7 +194,7 @@ int vaccine_status_bloom(MonitorData *data, int citizen_id, char *virus_name) {
 //    while ((cur_entry = htb_iter_next_entry(iter))) {
 //        char *c_name = cur_entry->key;
 //        int *c_vacc_count = cur_entry->item;
-//        CountryType *cur_country = htb_search(data->countries, c_name,
+//        Country *cur_country = htb_search(data->countries, c_name,
 //                                              STR_BYTES(c_name));
 //
 //        printf("%s\n", c_name);
@@ -324,15 +324,15 @@ int insert_record(MonitorData *data, char *record) {
     }
 
     // Search Citizen ID in data.
-    CitizenType *citizen = htb_search(data->citizens, &id, sizeof(int));
+    Citizen *citizen = htb_search(data->citizens, &id, sizeof(int));
     VirusInfo *virus = NULL;
     if (!citizen) {
         // Search country
-        CountryType *country = htb_search(data->countries, country_name,
-                                          STR_BYTES(country_name));
+        Country *country = htb_search(data->countries, country_name,
+                                      STR_BYTES(country_name));
         if (!country) {
             // Create new country
-            country = (CountryType *) malloc(sizeof(CountryType));
+            country = (Country *) malloc(sizeof(Country));
             STR_CPY(country_name, country->name);
             country->population = 0;
             for (int i = 0; i < 4; i++)
@@ -346,7 +346,7 @@ int insert_record(MonitorData *data, char *record) {
         country->pop_by_age[get_age_group(age)]++;
 
         // Create new citizen
-        citizen = (CitizenType *) malloc(sizeof(CitizenType));
+        citizen = (Citizen *) malloc(sizeof(Citizen));
         citizen->id = id;
         STR_CPY(first_name, citizen->first_name);
         STR_CPY(last_name, citizen->last_name);
@@ -438,7 +438,7 @@ int insert_record(MonitorData *data, char *record) {
 //            last_name, country_name, age, virus_name, todays_date);
 //
 //    // Search citizen in data.
-//    CitizenType *citizen = htb_search(data->citizens, &id, sizeof(int));
+//    Citizen *citizen = htb_search(data->citizens, &id, sizeof(int));
 //    if (!citizen) {
 //        insert_record(data, buffer);
 //        free(todays_date);
@@ -479,7 +479,7 @@ int insert_record(MonitorData *data, char *record) {
 //        return -1;
 //    }
 //
-//    CitizenType *citizen = NULL;
+//    Citizen *citizen = NULL;
 //    SLNode *cur_node = virus->not_vaccinated->heads[0];
 //    while (cur_node) {
 //        citizen = cur_node->item;

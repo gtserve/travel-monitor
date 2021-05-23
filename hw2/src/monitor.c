@@ -17,6 +17,7 @@
 #include <errno.h>
 #include <math.h>
 
+#include "../include/bloomfilter.h"
 #include "../include/pipe.h"
 #include "../include/msg.h"
 #include "../include/util.h"
@@ -24,17 +25,24 @@
 #include "../include/commands.h"
 #include "../include/comm_protocol.h"
 
+#define EXP_RECORDS 1000
+
 MonitorData *mon_data;
 
 int record_parser(char *records_file_name);
 
-int get_directories(PipeChannel pc, char ***dir_names, int monitor_id);
-
-void send_filters(MonitorData *gen_data, PipeChannel pc, int bloom_size, int monitor_id);
+void send_filters();
 
 void op_handler(OP_CODE code, char *payload);
 
 void process_dir(char *dir_name);
+
+void skiplist_query(char *virus_name);
+
+void id_query(int citizen_id);
+
+PipeChannel pc;
+
 
 
 int main(int argc, char *argv[]) {
@@ -50,13 +58,12 @@ int main(int argc, char *argv[]) {
      */
 
     int bloom_size = (int) strtol(argv[3], NULL, 10);
-    mon_data = gdt_create(bloom_size, 10000);
+    mon_data = mnd_create(bloom_size, EXP_RECORDS);
 
     mon_data->id = (int) strtol(argv[1], NULL, 10);
     mon_data->buffer_size = (int) strtol(argv[2], NULL, 10);
     strcpy(mon_data->in_dir_path, argv[4]);
 
-    PipeChannel pc;
     strcpy(pc.reader_name, argv[6]);
     strcpy(pc.writer_name, argv[5]);
 
@@ -81,152 +88,71 @@ int main(int argc, char *argv[]) {
     while ((op_code != CDIRS_DONE) && (poll(pfds, 1, -1))) {
         if (pfds[0].revents & POLLIN) {
             char *payload = NULL;
-            msg_get(pc.reader_fd, mon_data->buffer_size, &payload);
-            op_code = decode_op(&payload);
-            op_handler(op_code, payload);
-            //free(payload);
+            char *del_ptr = NULL;
+            RECEIVE(op_code, payload, pc.reader_fd, mon_data->buffer_size, del_ptr);
+            if (op_code == CDIR) {
+                process_dir(payload);
+            }
+            free(del_ptr);
         }
     }
 
-    HT_Iterator *ht_iter = htb_iter_create(mon_data->countries);
-    CountryType *country = NULL;
-    while ((country = htb_iter_next(ht_iter)) != NULL ) {
-        printf("[M%d]: %s\n", mon_data->id, country->name);
+    // Send Filters.
+    send_filters();
+
+    // Print Countries
+    //    HT_Iterator *ht_iter = htb_iter_create(mon_data->countries);
+    //    Country *virus = NULL;
+    //    while ((virus = htb_iter_next(ht_iter)) != NULL ) {
+    //        printf("[M%d]: %s\n", mon_data->id, virus->name);
+    //    }
+    //    htb_iter_destroy(&ht_iter);
+
+
+    while (poll(pfds, 1, -1)) {
+        if (pfds[0].revents & POLLIN) {
+            OP_CODE op_code;
+            char *payload = NULL;
+            char *del_ptr = NULL;
+            RECEIVE(op_code, payload, pc.reader_fd, mon_data->buffer_size, del_ptr);
+//            printf("[M%d]: %s\n", mon_data->id, payload);
+            op_handler(op_code, payload);
+            free(del_ptr);
+        }
     }
-    htb_iter_destroy(&ht_iter);
-
-
-//    send_filters(gen_data, pc, bloom_size, id);
-
-//    struct pollfd pfds[1];
-//    pfds[0].fd = pc.reader_fd;
-//    pfds[0].events = POLLIN;
-//
-//    if (poll(pfds, 1, -1)) {
-//        if (pfds[0].revents & POLLIN) {
-//            char *buffer;
-//            msg_get(&buffer, pc.reader_fd);
-//            sprintf(buffer, "%s + M%s\n", buffer, argv[3]);
-//            msg_send(buffer, 100, pc.writer_fd);
-//            free(buffer);
-//        }
-//    }
-
-    close(pc.reader_fd);
-    close(pc.writer_fd);
-
-    printf("[M%d]: DONE!\n", mon_data->id);
-
-    gdt_destroy(&mon_data);
 
     return 0;
 }
 
-//int get_directories(PipeChannel pc, char ***dir_names, int monitor_id) {
-//
-//    char *buffer;
-//    msg_get(pc.reader_fd, 0, &buffer);
-//
-//    printf("[M%d]: %s\n", monitor_id, buffer);
-//
-//    int num_dirs = 0;
-//    for (int i = 0; i < strlen(buffer); i++) {
-//        if (buffer[i] == '$') {
-//            num_dirs++;
-//        }
-//    }
-//
-//    printf("[M%d]: NUM_DIRS= %d\n", monitor_id, num_dirs);
-//
-//    *dir_names = (char **) malloc(num_dirs * sizeof(char *));
-//
-//    char *token = strtok(buffer, SEP_TOKEN);
-//    int offset = 0;
-//    for (int i = 0; token != NULL; i++) {
-//        printf("[M%d]: Token%d= %s\n", monitor_id, i, token);
-//        (*dir_names)[i] = (char *) malloc((int) strlen(token) + 1);
-//        offset += (int) strlen(token) + 1;
-//        printf("[M%d]: Buffer= %s, Offset= %d\n", monitor_id, buffer+offset, offset);
-//        strcpy((*dir_names)[i], token);
-//        printf("[M%d]: Dir%d= %s\n", monitor_id, i, (*dir_names)[i]);
-//        token = strtok(NULL, SEP_TOKEN);
-//    }
-//
-//    printf("[M%d]: NUM_DIRS= %d\n", monitor_id, num_dirs);
-//
-//
-//    free(buffer);
-//    return num_dirs;
-//}
-//
-//void send_filters(MonitorData *gen_data, PipeChannel pc, int bloom_size, int monitor_id) {
-//
-//    int bf_bytes = (int) (ceil(bloom_size / (double) BAR_TYPE_BITS) * sizeof(BAR_TYPE));
-//    int msg_bytes = ((gen_data->viruses)->num_entries) * bf_bytes;
-//
-//
-//    printf("[M%d]: Num_Viruses=%d\n", monitor_id, ((gen_data->viruses)->num_entries));
-//
-//    HT_Iterator *ht_iter = htb_iter_create(gen_data->viruses);
-//    VirusInfo *virus = NULL;
-//    while ((virus = htb_iter_next(ht_iter)) != NULL) {
-//        msg_bytes += (int) (sizeof(int) + strlen(virus->name) + 3);
-//    }
-//    htb_iter_destroy(&ht_iter);
-//
-//
-//    char message[msg_bytes + 1];
-//
-//
-//    char *filters_msg = (char *) malloc(msg_bytes);
-//
-//    ht_iter = htb_iter_create(gen_data->viruses);
-//    virus = NULL;
-//    int offset = 0;
-//    printf("[M%d]: BF_MSG= ", monitor_id);
-//    while ((virus = htb_iter_next(ht_iter)) != NULL) {
-//        int virus_name_len = (int) strlen(virus->name);
-//
-//        printf("[M%d]: OK!\n", monitor_id);
-//
-//        // Virus name length
-//        memcpy(filters_msg + offset, &virus_name_len, sizeof(int));
-//        offset += sizeof(int);
-//        printf("%d|", virus_name_len);
-//
-//        // Virus name
-//        memcpy(filters_msg + offset, virus->name, virus_name_len);
-//        offset += (int) virus_name_len;
-//        printf("%s|", virus->name);
-//
-//        // Virus bloom filter array
-//        memcpy(filters_msg + offset, (virus->filter)->array, bf_bytes);
-//        offset += bf_bytes;
-//        printf("%d||", bf_bytes);
-//
-//        char buffer[bf_bytes + 1];
-//        memcpy(buffer, (virus->filter)->array, bf_bytes);
-//        buffer[bf_bytes] = '\0';
-//        offset += sprintf(message + offset, "%d$%s$%s$", virus_name_len,
-//                          virus->name, buffer);
-//    }
-//    htb_iter_destroy(&ht_iter);
-//    printf("%s\n", message);
-//    fflush(stdin);
-//
-//    msg_send(pc.writer_fd, 0, message, msg_bytes + 1);
-//
-//    free(filters_msg);
-//}
 
 void op_handler(OP_CODE code, char *payload) {
     switch (code) {
+        case EXIT: {
+            close(pc.reader_fd);
+            close(pc.writer_fd);
+            printf("[M%d]: DONE!\n", mon_data->id);
+            mnd_destroy(&mon_data);
+            exit(0);
+        }
         case CDIR: {
             process_dir(payload);
-        } case CDIRS_DONE: {
+            send_filters();
+            break;
+        }
+        case CDIRS_DONE: {
             // Do Nothing.
             break;
-        } default: {
+        }
+        case SL_QUERY: {
+            skiplist_query(payload);
+            break;
+        }
+        case ID_QUERY: {
+            int id = *((int *) payload);
+            id_query(id);
+            break;
+        }
+        default: {
             exit(-15);
         }
     }
@@ -264,19 +190,43 @@ int record_parser(char *records_file_name) {
     return 0;
 }
 
+void send_filters() {
+    // Send Bloom filters.
+    HT_Iterator *ht_iter = htb_iter_create(mon_data->viruses);
+    VirusInfo *virus = NULL;
+    while ((virus = htb_iter_next(ht_iter)) != NULL) {
+        // Send Virus name.
+        SEND_STR(BFILTER, virus->name, pc.writer_fd, mon_data->buffer_size);
+
+        // Send Bloom filter array.
+        int ba_bytes = BF_ARR_BYTES(virus->filter);
+        SEND_DATA(BFILTER, (char *) (virus->filter->array), ba_bytes, pc.writer_fd,
+                  mon_data->buffer_size);
+    }
+    htb_iter_destroy(&ht_iter);
+
+    char *buffer = "DONE";
+    SEND_STR(BFILTERS_DONE, buffer, pc.writer_fd, mon_data->buffer_size);
+}
+
 void process_dir(char *dir_name) {
 
-    // Create new country
-    CountryType *country = (CountryType *) malloc(sizeof(CountryType));
-    STR_CPY(dir_name, country->name);
-    country->population = 0;
-    for (int i = 0; i < 4; i++)
-        country->pop_by_age[i] = 0;
+    Country *country = htb_search(mon_data->countries, dir_name, STR_BYTES(dir_name));
 
-    // Save new country
-    htb_insert(mon_data->countries, dir_name, STR_BYTES(dir_name), country);
+    if (country == NULL) {
+        // Create new country
+        country = (Country *) malloc(sizeof(Country));
+        STR_CPY(dir_name, country->name);
+        country->population = 0;
+        for (int i = 0; i < 4; i++)
+            country->pop_by_age[i] = 0;
 
-    DIR* dir = NULL;
+        // Save new country
+        htb_insert(mon_data->countries, dir_name, STR_BYTES(dir_name), country);
+    }
+
+    // Open directory.
+    DIR *dir = NULL;
     char dir_path[PATH_SIZE] = "";
     strcat(dir_path, mon_data->in_dir_path);
     strcat(dir_path, "/");
@@ -289,13 +239,84 @@ void process_dir(char *dir_name) {
     struct dirent *dent = NULL;
     for (int j = 0; ((dent = readdir(dir)) != NULL); j++) {
         if (dent->d_type == DT_REG) {
-            printf("[M%d]: File %s\n", mon_data->id, dent->d_name);
-            char file_path[PATH_SIZE] = "";
-            strcat(file_path, dir_path);
-            strcat(file_path, "/");
-            strcat(file_path, dent->d_name);
-            record_parser(file_path);
+            if (!htb_search(mon_data->parsed_files, dent->d_name,
+                            STR_BYTES(dent->d_name))) {
+                printf("[M%d]: New File %s\n", mon_data->id, dent->d_name);
+                char file_path[PATH_SIZE] = "";
+                strcat(file_path, dir_path);
+                strcat(file_path, "/");
+                strcat(file_path, dent->d_name);
+                record_parser(file_path);
+                int *x = (int *) malloc(sizeof(int));
+                htb_insert(mon_data->parsed_files, dent->d_name,
+                           STR_BYTES(dent->d_name), x);
+            }
         }
     }
     closedir(dir);
+}
+
+void skiplist_query(char *virus_name) {
+
+    OP_CODE op_code;
+    char *payload = NULL;
+    char *del_ptr = NULL;
+    RECEIVE(op_code, payload, pc.reader_fd, mon_data->buffer_size, del_ptr);
+
+    int citizen_id = *((int *) payload);
+
+//    printf("[M%d]: %d\n", mon_data->id, citizen_id);
+
+
+    VirusInfo *virus = htb_search(mon_data->viruses, virus_name, STR_BYTES(virus_name));
+
+    if (virus == NULL) {
+        printf("[M%d]: VIRUS NULL!\n", mon_data->id);
+        exit(-1);
+    }
+
+    char *buffer = "NO";
+
+    VaccinationType *vacc  = NULL;
+    if ((vacc = skl_search(virus->vaccinated, citizen_id)) != NULL) {
+        SEND_STR(YES, vacc->date, pc.writer_fd, mon_data->buffer_size);
+    } else {
+        SEND_STR(NO, buffer, pc.writer_fd, mon_data->buffer_size);
+    }
+
+    free(del_ptr);
+}
+
+void id_query(int citizen_id) {
+
+
+    Citizen *citizen = htb_search(mon_data->citizens, &citizen_id, sizeof(int));
+    char string[1024];
+
+
+    if (citizen != NULL) {
+        sprintf(string, "%d %s %s %s\nAGE %d\n", citizen->id, citizen->first_name,
+                citizen->last_name, citizen->country->name, citizen->age);
+
+        int offset = (int) strlen(string);
+        VirusInfo *virus = NULL;
+        HT_Iterator *ht_iter = htb_iter_create(mon_data->viruses);
+        while ((virus = htb_iter_next(ht_iter)) != NULL) {
+
+            VaccinationType *vacc  = NULL;
+            if ((vacc = skl_search(virus->vaccinated, citizen_id)) != NULL) {
+                sprintf(string + offset, "%s VACCINATED ON %s", virus->name, vacc->date);
+            } else if (skl_search(virus->not_vaccinated, citizen_id) != NULL) {
+                sprintf(string + offset, "%s NOT YET VACCINATED", virus->name);
+            }
+
+        }
+        htb_iter_destroy(&ht_iter);
+
+        SEND_STR(YES, string, pc.writer_fd, mon_data->buffer_size);
+
+    } else {
+        SEND_STR(NO, string, pc.writer_fd, mon_data->buffer_size);
+        return;
+    }
 }

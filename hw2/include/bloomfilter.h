@@ -12,6 +12,7 @@
 
 #include "bitarray.h"
 
+#define BF_ARR_BYTES(bf) (((int) ceil((bf)->m_bits / (double) BAR_TYPE_BITS)) * sizeof(BAR_TYPE))
 
 /* ---------------------------- Data Types ---------------------------------- */
 

@@ -12,8 +12,19 @@
 
 #include "../include/data.h"
 
+#define EXP_COUNTRIES 200
+#define EXP_VIRUSES 1000
+
 
 /* ------------------------------------ Basic Operations ---------------------------------------- */
+
+/* TravelRequest */
+void trq_destroy(TravelRequest **travel_req) {
+    free((*travel_req)->date);
+    free((*travel_req)->country_name);
+    free(*travel_req);
+    *travel_req = NULL;
+}
 
 /* VaccinationType */
 void vac_destroy(VaccinationType **vaccination) {
@@ -22,15 +33,15 @@ void vac_destroy(VaccinationType **vaccination) {
     *vaccination = NULL;
 }
 
-/* CountryType */
-void cnt_destroy(CountryType **country) {
+/* Country */
+void cnt_destroy(Country **country) {
     free((*country)->name);
     free(*country);
     *country = NULL;
 }
 
-/* CitizenType */
-void ctz_destroy(CitizenType **citizen) {
+/* Citizen */
+void ctz_destroy(Citizen **citizen) {
     free((*citizen)->first_name);
     free((*citizen)->last_name);
     free(*citizen);
@@ -61,19 +72,21 @@ void vir_destroy(VirusInfo **virus) {
 }
 
 /* MonitorData */
-MonitorData *gdt_create(unsigned int bloom_size, unsigned int exp_records) {
+MonitorData *mnd_create(unsigned int bloom_size, unsigned int exp_records) {
     MonitorData *gen_data = (MonitorData *) malloc(sizeof(MonitorData));
     gen_data->bloom_size = bloom_size;
     gen_data->exp_records = exp_records;
     gen_data->citizens = htb_create(exp_records);
-    gen_data->countries = htb_create(200);
-    gen_data->viruses = htb_create(1000);
+    gen_data->parsed_files = htb_create(EXP_COUNTRIES);
+    gen_data->countries = htb_create(EXP_COUNTRIES);
+    gen_data->viruses = htb_create(EXP_VIRUSES);
 
     return gen_data;
 }
 
-void gdt_destroy(MonitorData **gen_data) {
+void mnd_destroy(MonitorData **gen_data) {
     htb_destroy_all(&(*gen_data)->citizens, (FP_item_free) ctz_destroy);
+    htb_destroy(&(*gen_data)->parsed_files, 1);
     htb_destroy_all(&(*gen_data)->countries, (FP_item_free) cnt_destroy);
     htb_destroy_all(&(*gen_data)->viruses, (FP_item_free) vir_destroy);
 
@@ -81,22 +94,52 @@ void gdt_destroy(MonitorData **gen_data) {
     *gen_data = NULL;
 }
 
+TM_MonitorData *tmm_create(unsigned int bloom_size, unsigned int exp_records) {
+    TM_MonitorData *tmm_data = (TM_MonitorData *) malloc(sizeof(TM_MonitorData));
+    tmm_data->bloom_size = bloom_size;
+    tmm_data->exp_records = exp_records;
+    tmm_data->countries = htb_create(EXP_COUNTRIES);
+    tmm_data->viruses = htb_create(EXP_VIRUSES);
 
-/* TM_Data */
-TM_Data *mtr_create(unsigned int bloom_size, unsigned int exp_records) {
-    TM_Data *mtr_data = (TM_Data *) malloc(sizeof(TM_Data));
-    mtr_data->bloom_size = bloom_size;
-    mtr_data->exp_records = exp_records;
-    mtr_data->countries = htb_create(200);
-    mtr_data->viruses = htb_create(1000);
-
-    return mtr_data;
+    return tmm_data;
 }
 
-void mtr_destroy(TM_Data **mtr_data) {
-    htb_destroy_all(&(*mtr_data)->countries, (FP_item_free) cnt_destroy);
-    htb_destroy_all(&(*mtr_data)->viruses, (FP_item_free) vir_destroy);
+void tmm_destroy(TM_MonitorData **tmm_data) {
+    htb_destroy_all(&(*tmm_data)->countries, (FP_item_free) cnt_destroy);
+    htb_destroy_all(&(*tmm_data)->viruses, (FP_item_free) vir_destroy);
 
-    free(*mtr_data);
-    *mtr_data = NULL;
+    free(*tmm_data);
+    *tmm_data = NULL;
+}
+
+
+/* TM_Data */
+TM_Data *tmd_create(int num_monitors, unsigned int bloom_size, unsigned int exp_records) {
+    TM_Data *tm_data = (TM_Data *) malloc(sizeof(TM_Data));
+
+    tm_data->num_monitors = num_monitors;
+
+    tm_data->mon_data = (TM_MonitorData **) malloc(sizeof(TM_MonitorData) * num_monitors);
+    for (int i = 0; i < num_monitors; i++)
+        tm_data->mon_data[i] = tmm_create(bloom_size, exp_records);
+
+    tm_data->country_to_monitor = htb_create(EXP_COUNTRIES);
+    tm_data->virus_to_requests = htb_create(EXP_COUNTRIES);
+
+    return tm_data;
+}
+
+void tmd_destroy(TM_Data **tm_data) {
+    for (int i = 0; i < (*tm_data)->num_monitors; i++)
+        tmm_destroy(&((*tm_data)->mon_data[i]));
+    free((*tm_data)->mon_data);
+
+    free((*tm_data)->pipe_channels);
+
+    htb_destroy(&(*tm_data)->country_to_monitor, 1);
+    htb_destroy_all(&(*tm_data)->virus_to_requests, (FP_item_free) skl_destroy_req);
+
+
+    free(*tm_data);
+    *tm_data = NULL;
 }

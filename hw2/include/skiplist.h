@@ -46,5 +46,7 @@ void skl_destroy(SkipList **list);
 
 void skl_destroy_all(SkipList **list, FP_item_free item_free);
 
+void skl_destroy_req(SkipList **list);
+
 
 #endif //HW_SYSPRO_SKIPLIST_H
