@@ -4,11 +4,36 @@ project(syspro-hw3 C)
 set(CMAKE_C_STANDARD 99)
 
 add_executable(
-        tm_client
+        travelMonitorClient
         src/tm_client.c
+        src/msg.c
+        src/util.c
+        src/commands.c
+        src/data.c
+        src/hashtable.c
+        src/hash.c
+        src/bloomfilter.c
+        src/skiplist.c
+        src/comm_protocol.c
+        src/handler.c
+        include/sockets.h
 )
 
 add_executable(
-        tm_server
+        monitorServer
         src/tm_server.c
+        src/msg.c
+        src/util.c
+        src/commands.c
+        src/data.c
+        src/hashtable.c
+        src/hash.c
+        src/bloomfilter.c
+        src/skiplist.c
+        src/comm_protocol.c
+        include/sockets.h
 )
+
+target_link_libraries(travelMonitorClient -lm)
+
+target_link_libraries(monitorServer -lm)

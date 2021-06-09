@@ -41,7 +41,7 @@
 {                                               \
     if (check) {                                \
         fprintf(stderr, (msg), (arg));          \
-        exit(EXIT_FAILURE);                     \
+        exit(-1);                     \
     }                                           \
 }
 
@@ -49,13 +49,18 @@
 {                                               \
     if (check) {                                \
         fprintf(stderr, (msg));                 \
-        exit(EXIT_FAILURE);                     \
+        exit(-1);                     \
     }                                           \
 }
 
 #define PATH_SIZE 256
-//#define SEP_TOKEN "$"
+#define EXP_RECORDS 1000
+#define INT_STR_SIZE 20
+#define NAME_SIZE 256
 #define TOK_DELIM " \n"
+
+// Temp
+#define BUF_SIZE 256
 
 // String Operations
 #define STR_EQUALS(str1, str2) (strcmp((str1), (str2)) == 0)

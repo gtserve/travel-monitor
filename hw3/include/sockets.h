@@ -1,4 +1,4 @@
-/* pipe.h
+/* socket.h
 * -------------------------------------------------------------------------------------------------
 * course:   System Programming
 * project:  (#3) Travel Monitor (sockets, threads)
@@ -7,17 +7,14 @@
 * -------------------------------------------------------------------------------------------------
 */
 
-#ifndef SYSPRO_HW2_PIPE_H
-#define SYSPRO_HW2_PIPE_H
+#ifndef SYSPRO_HW3_SOCKETS_H
+#define SYSPRO_HW3_SOCKETS_H
 
-#define PIPE_NAME_SIZE 32
-#define PIPE_PERMS 0666
+#define MY_PORT 9002
 
 typedef struct {
-    int reader_fd;
-    int writer_fd;
-    char reader_name[PIPE_NAME_SIZE];
-    char writer_name[PIPE_NAME_SIZE];
-} PipeChannel;
+    int *sockets;
+    int size;
+} SocketNetwork;
 
-#endif //SYSPRO_HW2_PIPE_H
+#endif //SYSPRO_HW3_SOCKETS_H

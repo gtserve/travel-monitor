@@ -99,11 +99,11 @@ int main(int argc, char **argv) {
             }
             default:
                 fprintf(stderr, "UNKNOWN ERROR!");
-                exit(EXIT_FAILURE);
+                exit(-1);
         }
     }
 
-    printf("[TM]: Arguments=\n");
+    printf("[CL]: Arguments=\n");
     printf("  NUM_MONITORS:  %d\n", p_args.num_monitors);
     printf("  BUFFER_SIZE:   %d\n", p_args.buffer_size);
     printf("  SIZE_OF_BLOOM: %d\n", p_args.bloom_size);
@@ -315,13 +315,13 @@ int main(int argc, char **argv) {
     // Destroy Monitor pids array.
     free(monitor_pids);
 
-    printf("[TM]: DONE!\n");
+    printf("[CL]: DONE!\n");
     return 0;
 }
 
 void usage(char *prog_name) {
     fprintf(stderr, USAGE_STR, (prog_name ? prog_name : PROG_NAME));
-    exit(EXIT_FAILURE);
+    exit(-1);
 }
 
 void travel_request(int citizen_id, char *date, char *country_from, char *country_to,

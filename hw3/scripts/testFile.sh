@@ -11,8 +11,10 @@ ERR_NUM_ARGS=1
 ERR_FILE_IO=2
 #ERR_WRONG_ARG=3
 
-NAMES_FILE="./resources/names.txt"
-SURNAMES_FILE="./resources/surnames.txt"
+RES_DIR="../resources"
+NAMES_FILE="$RES_DIR/names.txt"
+SURNAMES_FILE="$RES_DIR/surnames.txt"
+RECORDS_FILE="$RES_DIR/records.txt"
 
 MAX_ID=10000
 
@@ -96,10 +98,9 @@ done <"$viruses_file"
 echo "Using $num_viruses viruses, $num_countries countries," \
     "$num_names names and $num_surnames surnames."
 
-# Create new empty input file.
-i_file="input.txt"
-if [[ -e "$i_file" ]]; then rm -f "$i_file"; fi
-touch "$i_file"
+# Create new empty file for the records.
+if [[ -e "$RECORDS_FILE" ]]; then rm -f "$RECORDS_FILE"; fi
+touch "$RECORDS_FILE"
 
 declare -a id_array
 num=0
@@ -167,6 +168,6 @@ while [[ "$index" -lt "$num_records" ]]; do
     index=$((index + 1))
 done
 
-echo -n "$records" >>"$i_file"
+echo -n "$records" >>"$RECORDS_FILE"
 
 exit 0
