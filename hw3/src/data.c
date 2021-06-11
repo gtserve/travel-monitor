@@ -119,6 +119,8 @@ TM_Data *tmd_create(int num_monitors, unsigned int bloom_size, unsigned int exp_
 
     tm_data->num_monitors = num_monitors;
 
+    tm_data->channels = (SocketChannel *) malloc(sizeof(SocketChannel) * num_monitors);
+
     tm_data->mon_data = (TM_MonitorData **) malloc(sizeof(TM_MonitorData) * num_monitors);
     for (int i = 0; i < num_monitors; i++)
         tm_data->mon_data[i] = tmm_create(bloom_size, exp_records);
@@ -134,7 +136,7 @@ void tmd_destroy(TM_Data **tm_data) {
         tmm_destroy(&((*tm_data)->mon_data[i]));
     free((*tm_data)->mon_data);
 
-    free((*tm_data)->pipe_channels);
+    free((*tm_data)->channels);
 
     htb_destroy(&(*tm_data)->country_to_monitor, 1);
     htb_destroy_all(&(*tm_data)->virus_to_requests, (FP_item_free) skl_destroy_req);

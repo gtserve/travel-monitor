@@ -21,6 +21,11 @@
 
 static int fd_days = -1;
 
+void perror_exit(char *message) {
+    perror(message);
+    exit(-1);
+}
+
 void str_replace(char *str, int length, char a, char b) {
     for (int i = 0; i < length; i++) {
         if (str[i] == a)

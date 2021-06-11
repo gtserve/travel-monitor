@@ -16,7 +16,7 @@ add_executable(
         src/skiplist.c
         src/comm_protocol.c
         src/handler.c
-        include/sockets.h
+        src/sockets.c
 )
 
 add_executable(
@@ -31,7 +31,7 @@ add_executable(
         src/bloomfilter.c
         src/skiplist.c
         src/comm_protocol.c
-        include/sockets.h
+        src/sockets.c
 )
 
 target_link_libraries(travelMonitorClient -lm)

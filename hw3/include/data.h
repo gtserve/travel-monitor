@@ -13,7 +13,7 @@
 #include "hashtable.h"
 #include "bloomfilter.h"
 #include "skiplist.h"
-#include "pipe.h"
+#include "sockets.h"
 
 
 /* -------------------------------------- Data Types -------------------------------------------- */
@@ -73,7 +73,7 @@ typedef struct {
 typedef struct {
     int num_monitors;
     TM_MonitorData **mon_data;
-    PipeChannel *pipe_channels;
+    SocketChannel *channels;
     HashTable *country_to_monitor;
     HashTable *virus_to_requests;
 } TM_Data;

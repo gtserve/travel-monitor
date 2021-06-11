@@ -31,6 +31,18 @@
 #include "../include/comm_protocol.h"
 #include "../include/sockets.h"
 
+
+typedef struct {
+    int id;
+    int socket_buf_size;
+    int cyclic_buf_size;
+    int bloom_size;
+    char input_dir[PATH_SIZE];
+    int port;
+    int num_threads;
+} MonitorArgs;
+
+
 MonitorData *mon_data;
 
 int record_parser(char *records_file_name);
@@ -45,170 +57,106 @@ void skiplist_query(char *virus_name);
 
 void id_query(int citizen_id);
 
-PipeChannel pc;
-
+FD_Channel channel;
 
 
 int main(int argc, char *argv[]) {
     /* Program Arguments:
      *   0: Executable name
      *   1: Monitor ID
-     *   2: Buffer Size
-     *   3: Bloom Filter size
-     *   4: Input Directory path
-     *   5: Pipe-Writer name
-     *   6: Pipe-Reader name
-     *   7: NULL
+     *   2: Socket Buffer Size
+     *   3: Cyclic Buffer Size
+     *   4: Bloom Filter size
+     *   5: Input Directory path
+     *   6: Port
+     *   7: Number of Threads
+     *   8: NULL
      */
 
-    int id = (int) strtol(argv[1], NULL, 10);
-    printf("[S%d]: Start!\n", id);
+    int m_id = (int) strtol(argv[1], NULL, 10);
+    printf("[S%d]: Process started! PID=%d\n", m_id, getpid());
 
-    /* Sockets */
-    int port = MY_PORT;
-    int socket_fd, newsocket_fd;
+    int port = (int) strtol(argv[6], NULL, 10);
+    ServerData *s_data = sdt_create(port);
 
-    struct sockaddr_in server;
-    struct sockaddr_in client;
-    struct sockaddr *server_ptr = (struct sockaddr *) &server;
-    struct sockaddr *client_ptr = (struct sockaddr *) &client;
-    socklen_t client_len;
-//    socklen_t *cl_len_ptr = &(client_len);
-    struct hostent *host = NULL;
+    /* Wait connection from Client. */
+    accept_connection(s_data);
+    printf("[S%d]: Accepted connection from %s, port=%d\n", m_id, s_data->host->h_name,
+           s_data->channel.port);
 
-    /* Create socket. */
-    if ((socket_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-        perror("socket creation");
-        exit(-1);
-    }
-
-//    char host_name[NAME_SIZE];
-//    gethostname(host_name, NAME_SIZE);
-//    if ((host = gethostbyname(host_name)) == NULL) {
-//        herror("gethostbyname");
-//        exit(-1);
-//    }
-
-    server.sin_family = AF_INET;
-    server.sin_addr.s_addr = htonl(INADDR_ANY);
-    server.sin_port = htons(port);
-
-    /* Bind socket. */
-    if (bind(socket_fd, server_ptr, sizeof(server)) < 0) {
-        perror("bind");
-        close(socket_fd);
-        exit(-1);
-    }
-
-    /* Listen socket. */
-    if (listen(socket_fd, 5) < 0) {
-        perror("bind");
-        close(socket_fd);
-        exit(-1);
-    }
-
-    printf("[S%d]: Listening for connections to port %d\n", id, port);
-
-    client_len = sizeof(client);
-    if ((newsocket_fd = accept(socket_fd, client_ptr, &client_len)) < 0) {
-        perror("accept");
-        close(socket_fd);
-        exit(-1);
-    }
-
-//    if ((host = gethostbyaddr((char *) &(client.sin_addr.s_addr),
-//                              sizeof(client.sin_addr.s_addr), client.sin_family)) == NULL) {
-//        perror("gethostbyaddr");
-//        exit(-1);
-//    }
-
-//    printf("[S%d]: Accepted connection from %s\n", id, host->h_name);
-
-    printf("[S%d]: Accepted connection.\n", id);
-
-    char *payload = NULL;
-    char *del_ptr = NULL;
-    int op_code = -1;
-
-    RECEIVE(op_code, payload, newsocket_fd, BUF_SIZE, del_ptr);
-
-    printf("[S%d]: Received %s\n", id, payload);
-
-    free(del_ptr);
-
-    char buffer[NAME_SIZE] = "Hello back!";
-
-    SEND_STR(YES, buffer, newsocket_fd, BUF_SIZE);
+    /* Establish Comm-Channel. */
+    channel.reader_fd = s_data->channel.socket_fd;
+    channel.writer_fd = s_data->channel.socket_fd;
 
 
-    close(socket_fd);
-    close(newsocket_fd);
-
-//    int bloom_size = (int) strtol(argv[3], NULL, 10);
-//    mon_data = mnd_create(bloom_size, EXP_RECORDS);
+//    char *payload = NULL;
+//    char *del_ptr = NULL;
+//    int op_code = -1;
 //
-//    mon_data->id = (int) strtol(argv[1], NULL, 10);
-//    mon_data->buffer_size = (int) strtol(argv[2], NULL, 10);
-//    strcpy(mon_data->in_dir_path, argv[4]);
+//    RECEIVE(op_code, payload, channel.reader_fd, BUF_SIZE, del_ptr);
 //
-//    strcpy(pc.reader_name, argv[6]);
-//    strcpy(pc.writer_name, argv[5]);
+//    printf("[S%d]: Received %s\n", m_id, payload);
 //
-//    printf("[M%d]: Received '%s' and '%s'\n", mon_data->id, pc.reader_name, pc.writer_name);
+//    free(del_ptr);
 //
-//    if ((pc.reader_fd = open(pc.reader_name, O_RDONLY)) == -1) {
-//        perror(pc.reader_name);
-//        exit(-1);
-//    }
+//    char buffer[NAME_SIZE];
+//    sprintf(buffer, "Hello Back! from S%d", m_id);
 //
-//    if ((pc.writer_fd = open(pc.writer_name, O_WRONLY)) == -1) {
-//        perror(pc.writer_name);
-//        exit(-1);
-//    }
-//
-//    struct pollfd pfds[1];
-//    pfds[0].fd = pc.reader_fd;
-//    pfds[0].events = POLLIN;
+//    SEND_STR(YES, buffer, channel.writer_fd, BUF_SIZE);
+
+
+    int bloom_size = (int) strtol(argv[4], NULL, 10);
+    mon_data = mnd_create(bloom_size, EXP_RECORDS);
+
+    mon_data->id = m_id;
+    mon_data->buffer_size = (int) strtol(argv[2], NULL, 10);
+    strcpy(mon_data->in_dir_path, argv[5]);
+
+    struct pollfd pfds[1];
+    pfds[0].fd = channel.reader_fd;
+    pfds[0].events = POLLIN;
 
     // Get Directories
-//    OP_CODE op_code = -1;
-//    while ((op_code != CDIRS_DONE) && (poll(pfds, 1, -1))) {
-//        if (pfds[0].revents & POLLIN) {
-//            char *payload = NULL;
-//            char *del_ptr = NULL;
-//            RECEIVE(op_code, payload, pc.reader_fd, mon_data->buffer_size, del_ptr);
-//            if (op_code == CDIR) {
-//                process_dir(payload);
-//            }
-//            free(del_ptr);
-//        }
-//    }
+    OP_CODE op_code = UNKNOWN;
+    while ((op_code != CDIRS_DONE) && (poll(pfds, 1, -1))) {
+        if (pfds[0].revents & POLLIN) {
+            char *payload = NULL;
+            char *del_ptr = NULL;
+            RECEIVE(op_code, payload, channel.reader_fd, mon_data->buffer_size, del_ptr);
+            if (op_code == CDIR) {
+                process_dir(payload);
+            }
+            free(del_ptr);
+        }
+    }
 
     // Send Filters.
-//    send_filters();
+    send_filters();
 
     // Print Countries
-    //    HT_Iterator *ht_iter = htb_iter_create(mon_data->countries);
-    //    Country *virus = NULL;
-    //    while ((virus = htb_iter_next(ht_iter)) != NULL ) {
-    //        printf("[M%d]: %s\n", mon_data->id, virus->name);
-    //    }
-    //    htb_iter_destroy(&ht_iter);
+    HT_Iterator *ht_iter = htb_iter_create(mon_data->countries);
+    Country *virus = NULL;
+    while ((virus = htb_iter_next(ht_iter)) != NULL) {
+        printf("[S%d]: %s\n", mon_data->id, virus->name);
+    }
+    htb_iter_destroy(&ht_iter);
 
+    while (poll(pfds, 1, -1)) {
+        if (pfds[0].revents & POLLIN) {
+            op_code = UNKNOWN;
+            char *payload = NULL;
+            char *del_ptr = NULL;
+            RECEIVE(op_code, payload, channel.reader_fd, mon_data->buffer_size, del_ptr);
+//            printf("[S%d]: %s\n", mon_data->id, payload);
+            op_handler(op_code, payload);
+            free(del_ptr);
+        }
+    }
 
-//    while (poll(pfds, 1, -1)) {
-//        if (pfds[0].revents & POLLIN) {
-//            OP_CODE op_code;
-//            char *payload = NULL;
-//            char *del_ptr = NULL;
-//            RECEIVE(op_code, payload, pc.reader_fd, mon_data->buffer_size, del_ptr);
-//            printf("[M%d]: %s\n", mon_data->id, payload);
-//            op_handler(op_code, payload);
-//            free(del_ptr);
-//        }
-//    }
+    /* Destroy Data */
+    sdt_destroy(&s_data);
 
-    printf("[S%d]: Done!", id);
+    printf("[S%d]: Done!\n", m_id);
     return 0;
 }
 
@@ -216,9 +164,9 @@ int main(int argc, char *argv[]) {
 void op_handler(OP_CODE code, char *payload) {
     switch (code) {
         case EXIT: {
-            close(pc.reader_fd);
-            close(pc.writer_fd);
-            printf("[M%d]: DONE!\n", mon_data->id);
+            close(channel.reader_fd);
+            close(channel.writer_fd);
+            printf("[S%d]: DONE!\n", mon_data->id);
             mnd_destroy(&mon_data);
             exit(0);
         }
@@ -239,6 +187,9 @@ void op_handler(OP_CODE code, char *payload) {
             int id = *((int *) payload);
             id_query(id);
             break;
+        }
+        case UNKNOWN: {
+            perror_exit("Unknown OP_CODE");
         }
         default: {
             exit(-15);
@@ -284,17 +235,17 @@ void send_filters() {
     VirusInfo *virus = NULL;
     while ((virus = htb_iter_next(ht_iter)) != NULL) {
         // Send Virus name.
-        SEND_STR(BFILTER, virus->name, pc.writer_fd, mon_data->buffer_size);
+        SEND_STR(BFILTER, virus->name, channel.writer_fd, mon_data->buffer_size);
 
         // Send Bloom filter array.
         int ba_bytes = BF_ARR_BYTES(virus->filter);
-        SEND_DATA(BFILTER, (char *) (virus->filter->array), ba_bytes, pc.writer_fd,
+        SEND_DATA(BFILTER, (char *) (virus->filter->array), ba_bytes, channel.writer_fd,
                   mon_data->buffer_size);
     }
     htb_iter_destroy(&ht_iter);
 
     char *buffer = "DONE";
-    SEND_STR(BFILTERS_DONE, buffer, pc.writer_fd, mon_data->buffer_size);
+    SEND_STR(BFILTERS_DONE, buffer, channel.writer_fd, mon_data->buffer_size);
 }
 
 void process_dir(char *dir_name) {
@@ -327,17 +278,15 @@ void process_dir(char *dir_name) {
     struct dirent *dent = NULL;
     for (int j = 0; ((dent = readdir(dir)) != NULL); j++) {
         if (dent->d_type == DT_REG) {
-            if (!htb_search(mon_data->parsed_files, dent->d_name,
-                            STR_BYTES(dent->d_name))) {
-                printf("[M%d]: New File %s\n", mon_data->id, dent->d_name);
+            if (!htb_search(mon_data->parsed_files, dent->d_name, STR_BYTES(dent->d_name))) {
+                printf("[S%d]: New File %s\n", mon_data->id, dent->d_name);
                 char file_path[PATH_SIZE] = "";
                 strcat(file_path, dir_path);
                 strcat(file_path, "/");
                 strcat(file_path, dent->d_name);
                 record_parser(file_path);
                 int *x = (int *) malloc(sizeof(int));
-                htb_insert(mon_data->parsed_files, dent->d_name,
-                           STR_BYTES(dent->d_name), x);
+                htb_insert(mon_data->parsed_files, dent->d_name, STR_BYTES(dent->d_name), x);
             }
         }
     }
@@ -349,27 +298,27 @@ void skiplist_query(char *virus_name) {
     OP_CODE op_code;
     char *payload = NULL;
     char *del_ptr = NULL;
-    RECEIVE(op_code, payload, pc.reader_fd, mon_data->buffer_size, del_ptr);
+    RECEIVE(op_code, payload, channel.reader_fd, mon_data->buffer_size, del_ptr);
 
     int citizen_id = *((int *) payload);
 
-//    printf("[M%d]: %d\n", mon_data->id, citizen_id);
+//    printf("[S%d]: %d\n", mon_data->id, citizen_id);
 
 
     VirusInfo *virus = htb_search(mon_data->viruses, virus_name, STR_BYTES(virus_name));
 
     if (virus == NULL) {
-        printf("[M%d]: VIRUS NULL!\n", mon_data->id);
+        printf("[S%d]: VIRUS NULL!\n", mon_data->id);
         exit(-1);
     }
 
     char *buffer = "NO";
 
-    VaccinationType *vacc  = NULL;
+    VaccinationType *vacc = NULL;
     if ((vacc = skl_search(virus->vaccinated, citizen_id)) != NULL) {
-        SEND_STR(YES, vacc->date, pc.writer_fd, mon_data->buffer_size);
+        SEND_STR(YES, vacc->date, channel.writer_fd, mon_data->buffer_size);
     } else {
-        SEND_STR(NO, buffer, pc.writer_fd, mon_data->buffer_size);
+        SEND_STR(NO, buffer, channel.writer_fd, mon_data->buffer_size);
     }
 
     free(del_ptr);
@@ -391,7 +340,7 @@ void id_query(int citizen_id) {
         HT_Iterator *ht_iter = htb_iter_create(mon_data->viruses);
         while ((virus = htb_iter_next(ht_iter)) != NULL) {
 
-            VaccinationType *vacc  = NULL;
+            VaccinationType *vacc = NULL;
             if ((vacc = skl_search(virus->vaccinated, citizen_id)) != NULL) {
                 sprintf(string + offset, "%s VACCINATED ON %s", virus->name, vacc->date);
             } else if (skl_search(virus->not_vaccinated, citizen_id) != NULL) {
@@ -401,10 +350,10 @@ void id_query(int citizen_id) {
         }
         htb_iter_destroy(&ht_iter);
 
-        SEND_STR(YES, string, pc.writer_fd, mon_data->buffer_size);
+        SEND_STR(YES, string, channel.writer_fd, mon_data->buffer_size);
 
     } else {
-        SEND_STR(NO, string, pc.writer_fd, mon_data->buffer_size);
+        SEND_STR(NO, string, channel.writer_fd, mon_data->buffer_size);
         return;
     }
 }

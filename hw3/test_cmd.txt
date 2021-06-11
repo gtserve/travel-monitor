@@ -1,0 +1,4 @@
+/searchVaccinationStatus 720
+/searchVaccinationStatus 8044
+/searchVaccinationStatus 8885
+/searchVaccinationStatus 1700

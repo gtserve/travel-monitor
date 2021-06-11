@@ -55,7 +55,7 @@
 
 #define PATH_SIZE 256
 #define EXP_RECORDS 1000
-#define INT_STR_SIZE 20
+#define INT_STR_SIZE 16
 #define NAME_SIZE 256
 #define TOK_DELIM " \n"
 
@@ -73,6 +73,8 @@
 
 
 typedef void (* FP_item_free) (void **);
+
+void perror_exit(char *message);
 
 
 int str_is_alpha(char *str);

@@ -35,6 +35,7 @@
 #define USAGE_STR   "Program Usage:\n %s [-m numMonitors] [-b socketBufferSize] " \
                     "[-c cyclicBufferSize] [-s sizeOfBloom] [-i input_dir] [-t num_threads]\n"
 
+
 typedef struct {
     int num_monitors;
     int socket_buf_size;
@@ -42,23 +43,36 @@ typedef struct {
     int bloom_size;
     char input_dir[PATH_SIZE];
     int num_threads;
-} ProgArguments;
+} ProgramArgs;
+
 
 void usage(char *prog_name);
 
-void perror_exit(char *message);
-
 void get_cmd_args(int argc, char **argv);
+
 
 TM_Data *tm_data = NULL;
 
-ProgArguments p_args = {0, 0, 0};
+FD_Channel *channels = NULL;
+
+ProgramArgs p_args = {0, 0, 0};
 
 struct pollfd *pfds;
 
 
 int main(int argc, char **argv) {
-    printf("[CL]: Start!\n");
+    /* Program Arguments:
+     *   0: Executable name
+     *   1: Number of Monitors
+     *   2: Socket Buffer size
+     *   3: Cyclic Buffer size
+     *   4: Bloom Filter size
+     *   5: Input directory
+     *   6: Number of Threads
+     *   7: NULL
+     */
+
+    printf("[CL]: Process started! PID=%d\n", getpid());
 
     /* Get program arguments from command line. */
     get_cmd_args(argc, argv);
@@ -71,270 +85,197 @@ int main(int argc, char **argv) {
     strcpy(m_path + strlen(m_path), "/monitorServer");
     printf("Path to exec= %s\n", m_path);
 
-    /* Create TM_Server arguments. */
-    int num_m_args = 3;
-    char *m_args[num_m_args];
-    m_args[0] = (char *) malloc(strlen("monitorServer") + 1);
-    strcpy(m_args[0], "monitorServer");                           // exe name
-    m_args[1] = (char *) malloc(INT_STR_SIZE);                              // monitor id
-    sprintf(m_args[1], "%d", 0);
-    m_args[2] = NULL;
+    /* Create Data. */
+    tm_data = tmd_create(p_args.num_monitors, p_args.bloom_size, EXP_RECORDS);
+    ClientData *c_data = cdt_create(p_args.num_monitors);
+    channels = (FD_Channel *) malloc(sizeof(FD_Channel) * p_args.num_monitors);
+    pid_t *monitor_pids = (pid_t *) malloc(sizeof(pid_t) * p_args.num_monitors);
+    pfds = (struct pollfd *) malloc(sizeof(struct pollfd) * p_args.num_monitors);
 
-    /* Create TM_Server. */
-    pid_t pid = fork();
-    if (-1 == pid) {
-        perror_exit("fork");
+    /* Create TM_Server arguments. */
+    int num_m_args = 9;
+    char *m_args[num_m_args];
+
+    m_args[0] = (char *) malloc(strlen("monitorServer") + 1);
+    strcpy(m_args[0], "monitorServer");                             // exe name
+
+    m_args[1] = (char *) malloc(INT_STR_SIZE);                               // monitor id
+
+    m_args[2] = (char *) malloc(INT_STR_SIZE);
+    sprintf(m_args[2], "%d", p_args.socket_buf_size);              // socket buffer size
+
+    m_args[3] = (char *) malloc(INT_STR_SIZE);
+    sprintf(m_args[3], "%d", p_args.cyclic_buf_size);              // cyclic buffer size
+
+    m_args[4] = (char *) malloc(INT_STR_SIZE);
+    sprintf(m_args[4], "%d", p_args.bloom_size);                   // bloom filter size
+
+    m_args[5] = (char *) malloc(strlen(p_args.input_dir) + 1);
+    strcpy(m_args[5], p_args.input_dir);                                // input_dir path
+
+    m_args[6] = (char *) malloc(INT_STR_SIZE);                               // port
+
+    m_args[7] = (char *) malloc(INT_STR_SIZE);                               // number of threads
+    sprintf(m_args[7], "%d", p_args.num_threads);
+
+    m_args[num_m_args - 1] = NULL;
+
+    int port = MY_PORT;
+    for (int i = 0; i < p_args.num_monitors; i++) {
+
+        // Monitor ID
+        sprintf(m_args[1], "%d", i);
+
+        // Port
+        sprintf(m_args[6], "%d", port);
+
+        /* Establish Comm-Channel. */
+        channels[i].reader_fd = c_data->channels[i].socket_fd;
+        channels[i].writer_fd = c_data->channels[i].socket_fd;
+
+        c_data->channels[i].port = port;
+        c_data->servers[i].sin_port = htons(port);
+
+        pfds[i].fd = channels[i].reader_fd;
+        pfds[i].events = POLLIN;
+
+        /* Spawn Monitor. */
+        pid_t pid = fork();
+        switch (pid) {
+            case -1: {
+                // Error
+                perror_exit("fork");
+            }
+            case 0: {
+                // Child
+                if (execvp(m_path, m_args) < 0) {
+                    perror_exit("execvp");
+                }
+                break;
+            }
+            default: {
+                // Parent
+                monitor_pids[i] = pid;
+                break;
+            }
+        }
+
+        port++;
     }
 
-    if (pid == 0) {
-        if (execvp(m_path, m_args) < 0) {
-            perror_exit("execvp");
+    // Wait for servers to reach accept().
+    sleep(3);
+
+    attempt_connection(c_data);
+
+//    char buffer[NAME_SIZE] = "Hello!";
+//
+//    SEND_STR(YES, buffer, channels[0].reader_fd, BUF_SIZE);
+//
+//    char *payload = NULL;
+//    char *del_ptr = NULL;
+//    int op_code = -1;
+//
+//    RECEIVE(op_code, payload, channels[0].writer_fd, BUF_SIZE, del_ptr);
+//
+//    printf("[CL]: Received %s\n", payload);
+//    free(del_ptr);
+
+
+    // Send Directories
+    DIR *in_dir;
+    if (!(in_dir = opendir(p_args.input_dir))) {
+        perror(p_args.input_dir);
+        exit(-1);
+    }
+    struct dirent *dent;
+    for (int i = 0; ((dent = readdir(in_dir)) != NULL); i++) {
+        if (strcmp(dent->d_name, ".") == 0 || strcmp(dent->d_name, "..") == 0)
+            continue;
+
+        // Send directory name to Monitor
+        SEND_STR(CDIR, dent->d_name, channels[i % p_args.num_monitors].writer_fd,
+                 p_args.socket_buf_size);
+
+        // Create new country
+        Country *country = (Country *) malloc(sizeof(Country));
+        STR_CPY(dent->d_name, country->name);
+        country->population = 0;
+
+        // Save country in Monitor Data
+        htb_insert(tm_data->mon_data[i % p_args.num_monitors]->countries, dent->d_name,
+                   STR_BYTES(dent->d_name), country);
+
+        // Save country in TM Data
+        int *m_id = (int *) malloc(sizeof(int));
+        *m_id = i % p_args.num_monitors;
+        htb_insert(tm_data->country_to_monitor, dent->d_name, STR_BYTES(dent->d_name),
+                   m_id);
+    }
+    closedir(in_dir);
+
+    // Send Directories is done.
+    for (int i = 0; i < p_args.num_monitors; i++) {
+        char *buffer = "DONE";
+        SEND_STR(CDIRS_DONE, buffer, channels[i].writer_fd,
+                 p_args.socket_buf_size);
+    }
+
+    // Get filters.
+    int counter = 0;
+    while ((counter < p_args.num_monitors) && (poll(pfds, p_args.num_monitors, -1))) {
+        for (int i = 0; i < p_args.num_monitors; i++) {
+            if (pfds[i].revents & POLLIN) {
+                OP_CODE op_code;
+                char *payload = NULL;
+                char *del_ptr = NULL;
+
+                RECEIVE(op_code, payload, channels[i].reader_fd,
+                        p_args.socket_buf_size,
+                        del_ptr);
+
+                if (op_code == BFILTER) {
+                    // Create new virus
+                    VirusInfo *virus = vir_create(payload, p_args.bloom_size, EXP_RECORDS);
+                    htb_insert(tm_data->mon_data[i]->viruses, payload, STR_BYTES(payload),
+                               virus);
+                    free(del_ptr);
+
+                    // Get Bloom filter array.
+                    payload = NULL;
+                    del_ptr = NULL;
+                    RECEIVE(op_code, payload, channels[i].reader_fd,
+                            p_args.socket_buf_size, del_ptr);
+
+                    // Copy filter array.
+                    memcpy(virus->filter->array, payload, BF_ARR_BYTES(virus->filter));
+                } else if (op_code == BFILTERS_DONE) {
+                    counter++;
+                } else {
+                    perror("Unexpected Message");
+                    exit(-1);
+                }
+
+                free(del_ptr);
+            }
         }
     }
 
-    sleep(3);
+    // Handle commands from input.
+    cmd_handler();
 
-    /* Sockets */
-    int port = MY_PORT;
-    int socket_fd;
+    /* Wait for children processes. */
+    for (int i = 0; i < p_args.num_monitors; i++)
+        wait(&(monitor_pids[i]));
 
-    struct sockaddr_in server;
-    struct sockaddr *server_ptr = (struct sockaddr *) &server;
-    struct hostent *rem = NULL;
-
-    /* Create socket. */
-    if ((socket_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-        close(socket_fd);
-        perror_exit("socket creation");
-    }
-
-    /* Get host. */
-    char host_name[NAME_SIZE];
-    gethostname(host_name, NAME_SIZE);
-    if ((rem = gethostbyname(host_name)) == NULL) {
-        herror("gethostbyname");
-        close(socket_fd);
-        exit(-1);
-    }
-
-    server.sin_family = AF_INET;
-    memcpy(&(server.sin_addr), rem->h_addr, rem->h_length);
-    server.sin_port = htons(port);
-
-    /* Initiate connection. */
-    if (connect(socket_fd, server_ptr, sizeof(server)) < 0) {
-        close(socket_fd);
-        perror_exit("connect");
-    }
-
-    printf("[CL]: Connecting to %s port %d\n", host_name, port);
-
-    char buffer[NAME_SIZE] = "Hello!";
-
-    SEND_STR(YES, buffer, socket_fd, BUF_SIZE);
-
-    char *payload = NULL;
-    char *del_ptr = NULL;
-    int op_code = -1;
-
-    RECEIVE(op_code, payload, socket_fd, BUF_SIZE, del_ptr);
-
-    printf("[CL]: Received %s\n", payload);
-
-    free(del_ptr);
-
-    close(socket_fd);
-
-
-//    m_args[2] = (char *) malloc(INT_STR_SIZE);
-//    sprintf(m_args[2], "%d", p_args.socket_buf_size);           // buffer size
-//
-//    m_args[3] = (char *) malloc(50);
-//    sprintf(m_args[3], "%d", p_args.bloom_size);            // bloom filter size
-//
-//    m_args[4] = (char *) malloc(strlen(p_args.input_dir) + 1);
-//    strcpy(m_args[4], p_args.input_dir);                         // input_dir path
-//
-//    m_args[5] = (char *) malloc(PIPE_NAME_SIZE);                      // pipe-reader name
-//    m_args[6] = (char *) malloc(PIPE_NAME_SIZE);                      // pipe-writer name
-//
-//    m_args[num_m_args - 1] = NULL;
-//
-//    // Create Data
-//    tm_data = tmd_create(p_args.num_monitors, p_args.bloom_size, EXP_RECORDS);
-//
-//    tm_data->pipe_channels = (PipeChannel *) malloc(sizeof(PipeChannel) * p_args.num_monitors);
-//
-//    // Save monitors process ids
-//    pid_t *monitor_pids = (pid_t *) malloc(sizeof(pid_t) * p_args.num_monitors);
-//
-//    pfds = (struct pollfd *) malloc(sizeof(struct pollfd) * p_args.num_monitors);
-//
-//    for (int i = 0; i < p_args.num_monitors; i++) {
-//        // Create Named Pipe (Reader)
-//        sprintf(tm_data->pipe_channels[i].reader_name, "%s/my_pipe_M%d_R", PIPE_PATH, i);
-//        if (mkfifo(tm_data->pipe_channels[i].reader_name, PIPE_PERMS) == -1) {
-//            perror(tm_data->pipe_channels[i].reader_name);
-//            exit(-1);
-//        }
-//        strcpy(m_args[5], tm_data->pipe_channels[i].reader_name);
-//
-//        // Create Named Pipe (Writer)
-//        sprintf(tm_data->pipe_channels[i].writer_name, "%s/my_pipe_M%d_W", PIPE_PATH, i);
-//        if (mkfifo(tm_data->pipe_channels[i].writer_name, PIPE_PERMS) == -1) {
-//            perror(tm_data->pipe_channels[i].writer_name);
-//            exit(-1);
-//        }
-//        strcpy(m_args[6], tm_data->pipe_channels[i].writer_name);
-//
-//        // Monitor ID
-//        sprintf(m_args[1], "%d", i);
-//
-//        pid_t pid = fork();
-//        if (-1 == pid) {
-//            perror("fork");
-//            exit(-1);
-//        }
-//
-//        if (pid == 0) {
-//            if (execvp(m_path, m_args) < 0) {
-//                perror("exec");
-//                exit(-1);
-//            }
-//        } else {
-//            // Save Monitor ID.
-//            monitor_pids[i] = pid;
-//        }
-//    }
-//
-//    // Open and initialize pipe channels.
-//    for (int i = 0; i < p_args.num_monitors; i++) {
-//        if ((tm_data->pipe_channels[i].writer_fd = open(tm_data->pipe_channels[i].writer_name,
-//                                                        O_WRONLY)) == -1) {
-//            perror(tm_data->pipe_channels[i].writer_name);
-//            exit(-1);
-//        }
-//
-//        if ((tm_data->pipe_channels[i].reader_fd = open(tm_data->pipe_channels[i].reader_name,
-//                                                        O_RDONLY)) == -1) {
-//            perror(tm_data->pipe_channels[i].reader_name);
-//            exit(-1);
-//        }
-//
-//        pfds[i].fd = tm_data->pipe_channels[i].reader_fd;
-//        pfds[i].events = POLLIN;
-//    }
-//
-//    // Send Directories
-//    DIR *in_dir;
-//    if (!(in_dir = opendir(p_args.input_dir))) {
-//        perror(p_args.input_dir);
-//        exit(-1);
-//    }
-//    struct dirent *dent;
-//    for (int i = 0; ((dent = readdir(in_dir)) != NULL); i++) {
-//        if (strcmp(dent->d_name, ".") == 0 || strcmp(dent->d_name, "..") == 0)
-//            continue;
-//
-//        // Send directory name to Monitor
-//        SEND_STR(CDIR, dent->d_name, tm_data->pipe_channels[i % p_args.num_monitors].writer_fd,
-//                 p_args.socket_buf_size);
-//
-//        // Create new country
-//        Country *country = (Country *) malloc(sizeof(Country));
-//        STR_CPY(dent->d_name, country->name);
-//        country->population = 0;
-//
-//        // Save country in Monitor Data
-//        htb_insert(tm_data->mon_data[i % p_args.num_monitors]->countries, dent->d_name,
-//                   STR_BYTES(dent->d_name), country);
-//
-//        // Save country in TM Data
-//        int *m_id = (int *) malloc(sizeof(int));
-//        *m_id = i % p_args.num_monitors;
-//        htb_insert(tm_data->country_to_monitor, dent->d_name, STR_BYTES(dent->d_name), m_id);
-//    }
-//    closedir(in_dir);
-//
-//    // Send Directories is done.
-//    for (int i = 0; i < p_args.num_monitors; i++) {
-//        char *buffer = "DONE";
-//        SEND_STR(CDIRS_DONE, buffer, tm_data->pipe_channels[i].writer_fd, p_args.socket_buf_size);
-//    }
-//
-//    // Get filters.
-//    int counter = 0;
-//    while ((counter < p_args.num_monitors) && (poll(pfds, p_args.num_monitors, -1))) {
-//        for (int i = 0; i < p_args.num_monitors; i++) {
-//            if (pfds[i].revents & POLLIN) {
-//                OP_CODE op_code;
-//                char *payload = NULL;
-//                char *del_ptr = NULL;
-//
-//                RECEIVE(op_code, payload, tm_data->pipe_channels[i].reader_fd, p_args.socket_buf_size,
-//                        del_ptr);
-//
-//                if (op_code == BFILTER) {
-//                    // Create new virus
-//                    VirusInfo *virus = vir_create(payload, p_args.bloom_size, EXP_RECORDS);
-//                    htb_insert(tm_data->mon_data[i]->viruses, payload, STR_BYTES(payload), virus);
-//                    free(del_ptr);
-//
-//                    // Get Bloom filter array.
-//                    payload = NULL;
-//                    del_ptr = NULL;
-//                    RECEIVE(op_code, payload, tm_data->pipe_channels[i].reader_fd,
-//                            p_args.socket_buf_size, del_ptr);
-//
-//                    // Copy filter array.
-//                    memcpy(virus->filter->array, payload, BF_ARR_BYTES(virus->filter));
-//                } else if (op_code == BFILTERS_DONE) {
-//                    counter++;
-//                } else {
-//                    perror("Unexpected Message");
-//                    exit(-1);
-//                }
-//
-//                free(del_ptr);
-//            }
-//        }
-//    }
-//
-//    // Handle commands from input.
-//    cmd_handler();
-//
-//    // Wait for children
-//    for (int i = 0; i < p_args.num_monitors; i++)
-//        wait(&(monitor_pids[i]));
-//
-//    // Close pipes.
-//    for (int i = 0; i < p_args.num_monitors; i++) {
-//        close(tm_data->pipe_channels[i].reader_fd);
-//        close(tm_data->pipe_channels[i].writer_fd);
-//    }
-//
-//    // Destroy pipe channels.
-//    for (int i = 0; i < p_args.num_monitors; i++) {
-//        if (unlink(tm_data->pipe_channels[i].reader_name) == -1) {
-//            perror(tm_data->pipe_channels[i].reader_name);
-//            exit(-1);
-//        }
-//
-//        if (unlink(tm_data->pipe_channels[i].writer_name) == -1) {
-//            perror(tm_data->pipe_channels[i].writer_name);
-//            exit(-1);
-//        }
-//    }
-//
-//    // Destroy Monitor arguments.
-//    for (int i = 0; i < num_m_args; i++)
-//        free(m_args[i]);
-//
-//    // Destroy Monitor data.
-//    tmd_destroy(&tm_data);
-//
-//    // Destroy Monitor pids array.
-//    free(monitor_pids);
+    /* Destroy Data */
+    tmd_destroy(&tm_data);
+    cdt_destroy(&c_data);
+    free(monitor_pids);
+    free(pfds);
+    for (int i = 0; i < num_m_args; i++)
+        free(m_args[i]);
+    free(channels);
 
     printf("[CL]: Done!\n");
     return 0;
@@ -423,11 +364,6 @@ void usage(char *prog_name) {
     exit(-1);
 }
 
-void perror_exit(char *message) {
-    perror(message);
-    exit(-1);
-}
-
 void
 travel_request(int citizen_id, char *date, char *country_from, char *country_to, char *virus_name) {
 
@@ -444,16 +380,16 @@ travel_request(int citizen_id, char *date, char *country_from, char *country_to,
 
     if (blf_query(virus->filter, citizen_id)) {
 
-        SEND_STR(SL_QUERY, virus_name, tm_data->pipe_channels[m_id].writer_fd,
+        SEND_STR(SL_QUERY, virus_name, channels[m_id].writer_fd,
                  p_args.socket_buf_size);
 
         SEND_DATA(SL_QUERY, (char *) &citizen_id, sizeof(int),
-                  tm_data->pipe_channels[m_id].writer_fd, p_args.socket_buf_size);
+                  channels[m_id].writer_fd, p_args.socket_buf_size);
 
         OP_CODE op_code;
         char *payload = NULL;
         char *del_ptr = NULL;
-        RECEIVE(op_code, payload, tm_data->pipe_channels[m_id].reader_fd, p_args.socket_buf_size,
+        RECEIVE(op_code, payload, channels[m_id].reader_fd, p_args.socket_buf_size,
                 del_ptr);
 
         if (op_code == YES) {
@@ -528,10 +464,10 @@ void search_vacc_status(int citizen_id) {
 
     for (int i = 0; i < p_args.num_monitors; i++) {
         SEND_DATA(ID_QUERY, (char *) (&citizen_id), sizeof(int),
-                  tm_data->pipe_channels[i].writer_fd, p_args.socket_buf_size);
+                  channels[i].writer_fd, p_args.socket_buf_size);
     }
 
-    OP_CODE op_code = -1;
+    OP_CODE op_code = UNKNOWN;
     int count = 0;
     while (poll(pfds, p_args.num_monitors, -1)) {
         for (int i = 0; i < p_args.num_monitors; i++) {
@@ -539,7 +475,7 @@ void search_vacc_status(int citizen_id) {
 
                 char *payload = NULL;
                 char *del_ptr = NULL;
-                RECEIVE(op_code, payload, tm_data->pipe_channels[i].reader_fd,
+                RECEIVE(op_code, payload, channels[i].reader_fd,
                         p_args.socket_buf_size, del_ptr);
 
                 if (op_code == YES) {
@@ -567,15 +503,15 @@ void add_vacc_records(char *country_dir) {
     int m_id = *((int *) htb_search(tm_data->country_to_monitor, country_dir,
                                     STR_BYTES(country_dir)));
 
-    SEND_STR(CDIR, country_dir, tm_data->pipe_channels[m_id].writer_fd, p_args.socket_buf_size);
+    SEND_STR(CDIR, country_dir, channels[m_id].writer_fd, p_args.socket_buf_size);
 
-    OP_CODE op_code = -1;
+    OP_CODE op_code = UNKNOWN;
     while ((op_code != BFILTERS_DONE) && (poll(pfds, p_args.num_monitors, -1))) {
         if (pfds[m_id].revents & POLLIN) {
             char *payload = NULL;
             char *del_ptr = NULL;
 
-            RECEIVE(op_code, payload, tm_data->pipe_channels[m_id].reader_fd,
+            RECEIVE(op_code, payload, channels[m_id].reader_fd,
                     p_args.socket_buf_size, del_ptr);
 
             if (op_code == BFILTERS_DONE) {
@@ -597,7 +533,7 @@ void add_vacc_records(char *country_dir) {
             // Get Bloom filter array.
             payload = NULL;
             del_ptr = NULL;
-            RECEIVE(op_code, payload, tm_data->pipe_channels[m_id].reader_fd,
+            RECEIVE(op_code, payload, channels[m_id].reader_fd,
                     p_args.socket_buf_size, del_ptr);
 
             // Copy filter array.
@@ -611,6 +547,6 @@ void add_vacc_records(char *country_dir) {
 void exit_monitors() {
     char *buffer = "DONE";
     for (int i = 0; i < p_args.num_monitors; i++) {
-        SEND_STR(EXIT, buffer, tm_data->pipe_channels[i].writer_fd, p_args.socket_buf_size);
+        SEND_STR(EXIT, buffer, channels[i].writer_fd, p_args.socket_buf_size);
     }
 }

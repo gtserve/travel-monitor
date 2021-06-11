@@ -44,6 +44,11 @@ typedef enum {
     EXIT
 } OP_CODE;
 
+typedef struct {
+    int reader_fd;
+    int writer_fd;
+} FD_Channel;
+
 int encode_str(OP_CODE code, char *str, char **payload);
 
 int encode_data(OP_CODE code, char *data, int data_bytes, char **payload);
