@@ -74,8 +74,14 @@ void vir_destroy(VirusInfo **virus) {
 /* MonitorData */
 MonitorData *mnd_create(unsigned int bloom_size, unsigned int exp_records) {
     MonitorData *gen_data = (MonitorData *) malloc(sizeof(MonitorData));
+
     gen_data->bloom_size = bloom_size;
     gen_data->exp_records = exp_records;
+
+    gen_data->num_req_total = 0;
+    gen_data->num_req_accepted = 0;
+    gen_data->num_req_rejected = 0;
+
     gen_data->citizens = htb_create(exp_records);
     gen_data->parsed_files = htb_create(EXP_COUNTRIES);
     gen_data->countries = htb_create(EXP_COUNTRIES);
@@ -118,6 +124,9 @@ TM_Data *tmd_create(int num_monitors, unsigned int bloom_size, unsigned int exp_
     TM_Data *tm_data = (TM_Data *) malloc(sizeof(TM_Data));
 
     tm_data->num_monitors = num_monitors;
+    tm_data->num_req_total = 0;
+    tm_data->num_req_accepted = 0;
+    tm_data->num_req_rejected = 0;
 
     tm_data->channels = (SocketChannel *) malloc(sizeof(SocketChannel) * num_monitors);
 
@@ -127,6 +136,7 @@ TM_Data *tmd_create(int num_monitors, unsigned int bloom_size, unsigned int exp_
 
     tm_data->country_to_monitor = htb_create(EXP_COUNTRIES);
     tm_data->virus_to_requests = htb_create(EXP_COUNTRIES);
+    tm_data->all_countries = htb_create(EXP_COUNTRIES);
 
     return tm_data;
 }
@@ -140,7 +150,7 @@ void tmd_destroy(TM_Data **tm_data) {
 
     htb_destroy(&(*tm_data)->country_to_monitor, 1);
     htb_destroy_all(&(*tm_data)->virus_to_requests, (FP_item_free) skl_destroy_req);
-
+    htb_destroy(&(*tm_data)->all_countries, 0);
 
     free(*tm_data);
     *tm_data = NULL;

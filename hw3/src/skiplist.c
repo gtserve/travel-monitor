@@ -67,11 +67,11 @@ void skl_destroy_nodes_req(SLNode *node) {
     ERR_CHECK_NULL(node, "ERROR: [SL] destroy_nodes(): null node.\n");
 
     if (node->next[0] != NULL)
-        skl_destroy_nodes(node->next[0]);
+        skl_destroy_nodes_req(node->next[0]);
 
     // Destroy node.
     free(node->next);
-    trq_destroy(node->item);
+    trq_destroy((TravelRequest **) &(node->item));
     free(node);
 }
 

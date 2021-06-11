@@ -57,6 +57,9 @@ typedef struct {
     unsigned int bloom_size;
     char in_dir_path[PATH_SIZE];
     unsigned int exp_records;
+    int num_req_total;
+    int num_req_accepted;
+    int num_req_rejected;
     HashTable *citizens;
     HashTable *countries;
     HashTable *viruses;
@@ -72,10 +75,14 @@ typedef struct {
 
 typedef struct {
     int num_monitors;
+    int num_req_total;
+    int num_req_accepted;
+    int num_req_rejected;
     TM_MonitorData **mon_data;
     SocketChannel *channels;
     HashTable *country_to_monitor;
     HashTable *virus_to_requests;
+    HashTable *all_countries;
 } TM_Data;
 
 /* ------------------------------------ Basic Operations ---------------------------------------- */

@@ -12,4 +12,7 @@ void add_vacc_records(char *country_dir);
 
 void exit_monitors();
 
+void log_file();
+
+
 #endif //SYSPRO_HW2_TRAVELMONITOR_H

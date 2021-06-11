@@ -83,7 +83,7 @@ int main(int argc, char **argv) {
         perror_exit("monitor path");
     }
     strcpy(m_path + strlen(m_path), "/monitorServer");
-    printf("Path to exec= %s\n", m_path);
+    // printf("Path to exec= %s\n", m_path);
 
     /* Create Data. */
     tm_data = tmd_create(p_args.num_monitors, p_args.bloom_size, EXP_RECORDS);
@@ -164,23 +164,9 @@ int main(int argc, char **argv) {
     }
 
     // Wait for servers to reach accept().
-    sleep(3);
+    sleep(2);
 
-    attempt_connection(c_data);
-
-//    char buffer[NAME_SIZE] = "Hello!";
-//
-//    SEND_STR(YES, buffer, channels[0].reader_fd, BUF_SIZE);
-//
-//    char *payload = NULL;
-//    char *del_ptr = NULL;
-//    int op_code = -1;
-//
-//    RECEIVE(op_code, payload, channels[0].writer_fd, BUF_SIZE, del_ptr);
-//
-//    printf("[CL]: Received %s\n", payload);
-//    free(del_ptr);
-
+    establish_connection(c_data);
 
     // Send Directories
     DIR *in_dir;
@@ -209,8 +195,11 @@ int main(int argc, char **argv) {
         // Save country in TM Data
         int *m_id = (int *) malloc(sizeof(int));
         *m_id = i % p_args.num_monitors;
-        htb_insert(tm_data->country_to_monitor, dent->d_name, STR_BYTES(dent->d_name),
-                   m_id);
+        htb_insert(tm_data->country_to_monitor, dent->d_name,
+                   STR_BYTES(dent->d_name), m_id);
+
+        htb_insert(tm_data->all_countries, dent->d_name,
+                   STR_BYTES(dent->d_name), country);
     }
     closedir(in_dir);
 
@@ -377,6 +366,7 @@ travel_request(int citizen_id, char *date, char *country_from, char *country_to,
     STR_CPY(date, travel_req->date);
     STR_CPY(country_to, travel_req->country_name);
 
+    tm_data->num_req_total++;
 
     if (blf_query(virus->filter, citizen_id)) {
 
@@ -399,18 +389,22 @@ travel_request(int citizen_id, char *date, char *country_from, char *country_to,
             if (travel_days - vacc_days > 6 * 30) {
                 printf("REQUEST REJECTED – YOU WILL NEED ANOTHER VACCINATION BEFORE TRAVEL DATE\n");
                 travel_req->answer = 0;
+                tm_data->num_req_rejected++;
             } else {
                 printf("REQUEST ACCEPTED – HAPPY TRAVELS\n");
                 travel_req->answer = 1;
+                tm_data->num_req_accepted++;
             }
         } else {
             printf("REQUEST REJECTED - YOU ARE NOT VACCINATED\n");
             travel_req->answer = 0;
+            tm_data->num_req_rejected++;
         }
         free(del_ptr);
     } else {
         printf("REQUEST REJECTED - YOU ARE NOT VACCINATED\n");
         travel_req->answer = 0;
+        tm_data->num_req_rejected++;
     }
 
     SkipList *skiplist = htb_search(tm_data->virus_to_requests, virus_name, STR_BYTES(virus_name));
@@ -549,4 +543,32 @@ void exit_monitors() {
     for (int i = 0; i < p_args.num_monitors; i++) {
         SEND_STR(EXIT, buffer, channels[i].writer_fd, p_args.socket_buf_size);
     }
+}
+
+void log_file() {
+
+    /* Find current working dir file_path. */
+    char file_path[PATH_SIZE];
+    sprintf(file_path, "../logs/log_file.%d", getpid());
+
+    FILE *file = NULL;
+    if ((file = fopen(file_path, "w+")) == NULL) {
+        perror_exit("log file open");
+    }
+
+    char str[5120] = "";
+
+    HT_Iterator *ht_iter = htb_iter_create(tm_data->all_countries);
+    Country *country = NULL;
+    while ((country = htb_iter_next(ht_iter)) != NULL) {
+        sprintf(str, "%s%s\n", str, country->name);
+    }
+    htb_iter_destroy(&ht_iter);
+
+    sprintf(str, "%sTOTAL TRAVEL REQUESTS %d\nACCEPTED %d\nREJECTED %d\n",
+            str, tm_data->num_req_total, tm_data->num_req_accepted, tm_data->num_req_rejected);
+
+    fputs(str, file);
+
+    fclose(file);
 }

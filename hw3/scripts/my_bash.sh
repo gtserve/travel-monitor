@@ -33,6 +33,6 @@ while read -r line; do
 
     requests+="/travelRequest $id $date $country_from $country_to $virus"$'\n'
 
-done <"./input.txt"
+done <"../resources/records.txt"
 
-echo -n "$requests" > ./requests.txt
+echo -n "$requests" > ../testing/travel_requests.txt

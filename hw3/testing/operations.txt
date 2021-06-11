@@ -2,3 +2,5 @@
 /searchVaccinationStatus 8044
 /searchVaccinationStatus 8885
 /searchVaccinationStatus 1700
+
+/travelStats Ebola 01-01-1600 31-12-2021

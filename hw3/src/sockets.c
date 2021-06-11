@@ -135,7 +135,7 @@ void accept_connection(ServerData *s_data) {
     close(temp_socket_fd);
 }
 
-void attempt_connection(ClientData *c_data) {
+void establish_connection(ClientData *c_data) {
 
     /* Attempt connection with all channels. */
     for (int i = 0; i < c_data->num_channels; i++) {

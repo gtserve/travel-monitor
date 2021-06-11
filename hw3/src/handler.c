@@ -15,7 +15,7 @@
 #include "../include/util.h"
 #include "../include/commands.h"
 #include "../include/handler.h"
-#include "../include/travelmonitor.h"
+#include "../include/tm_client.h"
 
 enum cmd_code {
     EXIT,
@@ -127,6 +127,7 @@ void cmd_handler() {
         switch (code) {
             case EXIT:
                 free(buffer);
+                log_file();
                 exit_monitors();
                 return;
             case TRAVEL_REQUEST: {

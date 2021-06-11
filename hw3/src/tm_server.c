@@ -43,7 +43,9 @@ typedef struct {
 } MonitorArgs;
 
 
-MonitorData *mon_data;
+MonitorData *mon_data = NULL;
+ServerData *s_data = NULL;
+FD_Channel channel;
 
 int record_parser(char *records_file_name);
 
@@ -57,7 +59,7 @@ void skiplist_query(char *virus_name);
 
 void id_query(int citizen_id);
 
-FD_Channel channel;
+void log_file();
 
 
 int main(int argc, char *argv[]) {
@@ -77,7 +79,7 @@ int main(int argc, char *argv[]) {
     printf("[S%d]: Process started! PID=%d\n", m_id, getpid());
 
     int port = (int) strtol(argv[6], NULL, 10);
-    ServerData *s_data = sdt_create(port);
+    s_data = sdt_create(port);
 
     /* Wait connection from Client. */
     accept_connection(s_data);
@@ -87,23 +89,6 @@ int main(int argc, char *argv[]) {
     /* Establish Comm-Channel. */
     channel.reader_fd = s_data->channel.socket_fd;
     channel.writer_fd = s_data->channel.socket_fd;
-
-
-//    char *payload = NULL;
-//    char *del_ptr = NULL;
-//    int op_code = -1;
-//
-//    RECEIVE(op_code, payload, channel.reader_fd, BUF_SIZE, del_ptr);
-//
-//    printf("[S%d]: Received %s\n", m_id, payload);
-//
-//    free(del_ptr);
-//
-//    char buffer[NAME_SIZE];
-//    sprintf(buffer, "Hello Back! from S%d", m_id);
-//
-//    SEND_STR(YES, buffer, channel.writer_fd, BUF_SIZE);
-
 
     int bloom_size = (int) strtol(argv[4], NULL, 10);
     mon_data = mnd_create(bloom_size, EXP_RECORDS);
@@ -133,30 +118,26 @@ int main(int argc, char *argv[]) {
     // Send Filters.
     send_filters();
 
-    // Print Countries
-    HT_Iterator *ht_iter = htb_iter_create(mon_data->countries);
-    Country *virus = NULL;
-    while ((virus = htb_iter_next(ht_iter)) != NULL) {
-        printf("[S%d]: %s\n", mon_data->id, virus->name);
-    }
-    htb_iter_destroy(&ht_iter);
+//    // Print Countries
+//    HT_Iterator *ht_iter = htb_iter_create(mon_data->countries);
+//    Country *virus = NULL;
+//    while ((virus = htb_iter_next(ht_iter)) != NULL) {
+//        printf("[S%d]: %s\n", mon_data->id, virus->name);
+//    }
+//    htb_iter_destroy(&ht_iter);
 
+    /* Handle Operations from Parent-Client. */
     while (poll(pfds, 1, -1)) {
         if (pfds[0].revents & POLLIN) {
             op_code = UNKNOWN;
             char *payload = NULL;
             char *del_ptr = NULL;
             RECEIVE(op_code, payload, channel.reader_fd, mon_data->buffer_size, del_ptr);
-//            printf("[S%d]: %s\n", mon_data->id, payload);
             op_handler(op_code, payload);
             free(del_ptr);
         }
     }
 
-    /* Destroy Data */
-    sdt_destroy(&s_data);
-
-    printf("[S%d]: Done!\n", m_id);
     return 0;
 }
 
@@ -164,10 +145,14 @@ int main(int argc, char *argv[]) {
 void op_handler(OP_CODE code, char *payload) {
     switch (code) {
         case EXIT: {
-            close(channel.reader_fd);
-            close(channel.writer_fd);
-            printf("[S%d]: DONE!\n", mon_data->id);
+            printf("[S%d]: Done!\n", mon_data->id);
+
+            log_file();
+
+            /* Destroy Data */
             mnd_destroy(&mon_data);
+            sdt_destroy(&s_data);
+
             exit(0);
         }
         case CDIR: {
@@ -304,7 +289,6 @@ void skiplist_query(char *virus_name) {
 
 //    printf("[S%d]: %d\n", mon_data->id, citizen_id);
 
-
     VirusInfo *virus = htb_search(mon_data->viruses, virus_name, STR_BYTES(virus_name));
 
     if (virus == NULL) {
@@ -356,4 +340,32 @@ void id_query(int citizen_id) {
         SEND_STR(NO, string, channel.writer_fd, mon_data->buffer_size);
         return;
     }
+}
+
+void log_file() {
+
+    /* Find current working dir file_path. */
+    char file_path[PATH_SIZE];
+    sprintf(file_path, "../logs/log_file.%d", getpid());
+
+    FILE *file = NULL;
+    if ((file = fopen(file_path, "w+")) == NULL) {
+        perror_exit("log file open");
+    }
+
+    char str[5120] = "";
+
+    HT_Iterator *ht_iter = htb_iter_create(mon_data->countries);
+    Country *country = NULL;
+    while ((country = htb_iter_next(ht_iter)) != NULL) {
+        sprintf(str, "%s%s\n", str, country->name);
+    }
+    htb_iter_destroy(&ht_iter);
+
+    sprintf(str, "%sTOTAL TRAVEL REQUESTS %d\nACCEPTED %d\nREJECTED %d\n",
+            str, mon_data->num_req_total, mon_data->num_req_accepted, mon_data->num_req_rejected);
+
+    fputs(str, file);
+
+    fclose(file);
 }

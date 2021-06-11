@@ -48,6 +48,6 @@ void cdt_destroy(ClientData **data);
 
 void accept_connection(ServerData *s_data);
 
-void attempt_connection(ClientData *c_data);
+void establish_connection(ClientData *c_data);
 
 #endif //SYSPRO_HW3_SOCKETS_H
