@@ -52,6 +52,7 @@ typedef struct {
 } VirusInfo;
 
 typedef struct {
+    pthread_mutex_t lock;
     int id;
     int buffer_size;
     unsigned int bloom_size;

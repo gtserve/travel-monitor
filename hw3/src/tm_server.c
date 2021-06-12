@@ -146,7 +146,6 @@ void op_handler(OP_CODE code, char *payload) {
     switch (code) {
         case EXIT: {
             printf("[S%d]: Done!\n", mon_data->id);
-
             log_file();
 
             /* Destroy Data */
@@ -235,17 +234,18 @@ void send_filters() {
 
 void process_dir(char *dir_name) {
 
+    /* Search country in data. */
     Country *country = htb_search(mon_data->countries, dir_name, STR_BYTES(dir_name));
 
     if (country == NULL) {
-        // Create new country
+        /* Create new country. */
         country = (Country *) malloc(sizeof(Country));
         STR_CPY(dir_name, country->name);
         country->population = 0;
         for (int i = 0; i < 4; i++)
             country->pop_by_age[i] = 0;
 
-        // Save new country
+        /* Save new country. */
         htb_insert(mon_data->countries, dir_name, STR_BYTES(dir_name), country);
     }
 
