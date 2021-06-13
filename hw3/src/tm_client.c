@@ -19,6 +19,7 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#include <sys/stat.h>
 
 #include "../include/sockets.h"
 #include "../include/util.h"
@@ -68,7 +69,7 @@ int main(int argc, char **argv) {
      *   7: NULL
      */
 
-    printf("[CL]: Process started! PID=%d\n", getpid());
+    printf("[CL]: Started! PID=%d\n", getpid());
 
     /* Get program arguments from command line. */
     get_cmd_args(argc, argv);
@@ -162,6 +163,7 @@ int main(int argc, char **argv) {
 
     /* Establish connection with Monitors-Servers. */
     establish_connection(c_data);
+    printf("[CL]: Established connection with all servers.\n");
 
     /*  Send Directories */
     DIR *in_dir;
@@ -334,13 +336,13 @@ void get_cmd_args(int argc, char **argv) {
         }
     }
 
-    printf("[CL]: Arguments=\n");
-    printf("  NUM_MONITORS:        %d\n", p_args.num_monitors);
-    printf("  SOCKET_BUFFER_SIZE:  %d\n", p_args.socket_buf_size);
-    printf("  CYCLIC_BUFFER_SIZE:  %d\n", p_args.cyclic_buf_size);
-    printf("  SIZE_OF_BLOOM:       %d\n", p_args.bloom_size);
-    printf("  INPUT_DIR:           %s\n", p_args.input_dir);
-    printf("  NUM_THREADS:         %d\n", p_args.num_threads);
+    printf("[CL]: Running with arguments:\n");
+    printf("  Number of Monitors = %d\n", p_args.num_monitors);
+    printf("  Socket Buffer size = %d\n", p_args.socket_buf_size);
+    printf("  Cyclic Buffer size = %d\n", p_args.cyclic_buf_size);
+    printf("  Bloom Filter size  = %d\n", p_args.bloom_size);
+    printf("  Input Directory    = %s\n", p_args.input_dir);
+    printf("  Number of Threads  = %d\n", p_args.num_threads);
 }
 
 void usage(char *prog_name) {
@@ -545,10 +547,12 @@ void exit_monitors() {
 
 void log_file() {
 
-    /* Find current working dir file_path. */
-    char file_path[PATH_SIZE];
-    sprintf(file_path, "../logs/log_file.%d", getpid());
+    /* Create directory for log files. */
+    mkdir("./logs/", 0777);
 
+    /* Create log file. */
+    char file_path[PATH_SIZE];
+    sprintf(file_path, "./logs/log_file.%d", getpid());
     FILE *file = NULL;
     if ((file = fopen(file_path, "w+")) == NULL) {
         perror_exit("log file open");

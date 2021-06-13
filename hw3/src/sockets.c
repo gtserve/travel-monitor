@@ -114,7 +114,7 @@ void accept_connection(ServerData *s_data) {
         perror("listen");
         exit(-1);
     }
-    printf("[SR]: Listening for connections to port %d\n", s_data->channel.port);
+//    printf("[SR]: Listening for connections to port %d\n", s_data->channel.port);
 
     /* Accept */
     int new_socket_fd;
@@ -139,8 +139,8 @@ void establish_connection(ClientData *c_data) {
 
     /* Attempt connection with all channels. */
     for (int i = 0; i < c_data->num_channels; i++) {
-        printf("[CL]: Attempting connection to %s, port=%d with SOCKET_FD=%d\n",
-               c_data->host->h_name, c_data->channels[i].port, c_data->channels[i].socket_fd);
+//        printf("[CL]: Attempting connection to %s, port=%d with SOCKET_FD=%d\n",
+//               c_data->host->h_name, c_data->channels[i].port, c_data->channels[i].socket_fd);
 
         while (connect(c_data->channels[i].socket_fd, c_data->server_ptrs[i],
                     sizeof(c_data->servers[i])) < 0) {
@@ -152,7 +152,7 @@ void establish_connection(ClientData *c_data) {
             usleep(100);
         }
 
-        printf("[CL]: Connecting to %s, port=%d with SOCKET_FD=%d\n",
-               c_data->host->h_name, c_data->channels[i].port, c_data->channels[i].socket_fd);
+//        printf("[CL]: Connecting to %s, port=%d with SOCKET_FD=%d\n",
+//               c_data->host->h_name, c_data->channels[i].port, c_data->channels[i].socket_fd);
     }
 }

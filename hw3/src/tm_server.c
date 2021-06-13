@@ -74,7 +74,7 @@ int main(int argc, char *argv[]) {
     m_data = mnd_create(bloom_size, EXP_RECORDS);
 
     m_data->id = (int) strtol(argv[1], NULL, 10);
-    printf("[S%d]: Process started! PID=%d\n", m_data->id, getpid());
+    printf("[S%d]: Started! PID=%d\n", m_data->id, getpid());
 
     m_data->socket_buf_size = (int) strtol(argv[2], NULL, 10);
     m_data->cyclic_buf_size = (int) strtol(argv[3], NULL, 10);
@@ -86,8 +86,8 @@ int main(int argc, char *argv[]) {
 
     /* Wait connection from Client. */
     accept_connection(s_data);
-    printf("[S%d]: Accepted connection from %s, port=%d\n", m_data->id, s_data->host->h_name,
-           s_data->channel.port);
+    printf("[S%d]: Accepted connection from %s, port=%d\n", m_data->id,
+           s_data->host->h_name, s_data->channel.port);
 
     /* Establish Comm-Channel. */
     channel.reader_fd = s_data->channel.socket_fd;
@@ -101,14 +101,14 @@ int main(int argc, char *argv[]) {
     /* Create ThreadPool */
     th_pool = thp_create(m_data->num_threads, m_data->cyclic_buf_size);
 
-
     /* Get Directories */
     OP_CODE op_code = UNKNOWN;
     while ((op_code != CDIRS_DONE) && (poll(pfds, 1, -1))) {
         if (pfds[0].revents & POLLIN) {
             char *payload = NULL;
             char *del_ptr = NULL;
-            RECEIVE(op_code, payload, channel.reader_fd, m_data->socket_buf_size, del_ptr);
+            RECEIVE(op_code, payload, channel.reader_fd,
+                    m_data->socket_buf_size, del_ptr);
             if (op_code == CDIR) {
                 process_dir(payload);
             }
@@ -136,7 +136,8 @@ int main(int argc, char *argv[]) {
             op_code = UNKNOWN;
             char *payload = NULL;
             char *del_ptr = NULL;
-            RECEIVE(op_code, payload, channel.reader_fd, m_data->socket_buf_size, del_ptr);
+            RECEIVE(op_code, payload, channel.reader_fd,
+                    m_data->socket_buf_size, del_ptr);
             op_handler(op_code, payload);
             free(del_ptr);
         }
@@ -383,7 +384,7 @@ void log_file() {
 
     /* Find current working dir file_path. */
     char file_path[PATH_SIZE];
-    sprintf(file_path, "../logs/log_file.%d", getpid());
+    sprintf(file_path, "./logs/log_file.%d", getpid());
 
     FILE *file = NULL;
     if ((file = fopen(file_path, "w+")) == NULL) {

@@ -29,4 +29,4 @@ input_dir
 records.txt
 
 #Log files
-log_file.*
+logs/

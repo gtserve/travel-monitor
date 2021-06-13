@@ -10,9 +10,6 @@
 #ifndef SYSPRO_HW2_MSG_H
 #define SYSPRO_HW2_MSG_H
 
-#include "pipe.h"
-
-#define PIPE_PATH "/tmp"
 
 typedef struct {
     int num_packages;
@@ -20,9 +17,9 @@ typedef struct {
 } MessageHeader;
 
 
-void msg_send(int pipe_fd, int pkg_size, char *payload, int payload_bytes);
+void msg_send(int fd, int pkg_size, char *payload, int payload_bytes);
 
-int msg_get(int pipe_fd, int pkg_size, char **payload);
+int msg_get(int fd, int pkg_size, char **payload);
 
 void safe_write(int fd, const void *buffer, size_t bytes);
 

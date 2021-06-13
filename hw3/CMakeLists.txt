@@ -36,17 +36,6 @@ add_executable(
         src/task_cqueue.c
 )
 
-add_executable(
-        test_thpool
-        src/test_thpool.c
-        src/thpool.c
-        src/util.c
-        src/task_cqueue.c
-)
-
 target_link_libraries(travelMonitorClient -lm)
 
 target_link_libraries(monitorServer -lm -lpthread)
-
-target_link_libraries(test_thpool -lpthread)
-

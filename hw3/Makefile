@@ -6,24 +6,26 @@
 # email:    sdi1500164@di.uoa.gr
 # -------------------------------------------------------------------------------------------------
 
-#LS1 = ./src/travelmonitor.c ./src/monitor.c ./src/handler.c
-#LS2 = ./src/travelmonitor.c ./src/monitor.c
-#
-#SRC1:=$(filter-out $(LS1), $(wildcard ./src/*.c))
-#SRC2:=$(filter-out $(LS2), $(wildcard ./src/*.c))
-#
-#EXE = travelMonitor
-#CC  = gcc
-#CFL = -O2 -g
-#LIB = -lm
-#
-#all: compile_monitor compile_travelmonitor
-#
-#compile_monitor:
-#	$(CC) $(CFL) ./src/monitor.c $(SRC1) -o ./monitor $(LIB)
-#
-#compile_travelmonitor:
-#	$(CC) $(CFL) ./src/travelmonitor.c $(SRC2) -o $(EXE) $(LIB)
-#
-#clean:
-#	rm -f ./travelMonitor ./monitor
+
+CC  = gcc
+CFL = -O2 -g
+
+LS1 = ./src/tm_client.c ./src/tm_server.c ./src/task_queue.c ./src/handler.c
+LS2 = ./src/tm_client.c ./src/tm_server.c ./src/task_queue.c ./src/thpool.c
+
+SRC1:=$(filter-out $(LS1), $(wildcard ./src/*.c))
+SRC2:=$(filter-out $(LS2), $(wildcard ./src/*.c))
+
+LIB1 = -lm -lpthread
+LIB2 = -lm
+
+all: compile_server compile_client
+
+compile_server:
+	$(CC) $(CFL) ./src/tm_server.c $(SRC1) -o ./monitorServer $(LIB1)
+
+compile_client:
+	$(CC) $(CFL) ./src/tm_client.c $(SRC2) -o ./travelMonitorClient $(LIB2)
+
+clean:
+	rm -f ./travelMonitorClient ./monitorServer

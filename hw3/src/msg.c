@@ -15,7 +15,7 @@
 #include "../include/msg.h"
 
 
-void msg_send(int pipe_fd, int pkg_size, char *payload, int payload_bytes) {
+void msg_send(int fd, int pkg_size, char *payload, int payload_bytes) {
 
     // Create MessageHeader.
     MessageHeader msg_header;
@@ -23,23 +23,23 @@ void msg_send(int pipe_fd, int pkg_size, char *payload, int payload_bytes) {
     msg_header.num_packages = (int) ceil(payload_bytes / (double) pkg_size);
 
     // Send MessageHeader.
-    safe_write(pipe_fd, &msg_header, sizeof(MessageHeader));
+    safe_write(fd, &msg_header, sizeof(MessageHeader));
 
     // Send payload.
     int offset = 0;
     for (int i = 0; i < msg_header.num_packages - 1; i++) {
-        safe_write(pipe_fd, payload + offset, pkg_size);
+        safe_write(fd, payload + offset, pkg_size);
         offset += pkg_size;
     }
     // Last write() may write less bytes than package size.
-    safe_write(pipe_fd, payload + offset, payload_bytes - offset);
+    safe_write(fd, payload + offset, payload_bytes - offset);
 }
 
-int msg_get(int pipe_fd, int pkg_size, char **payload) {
+int msg_get(int fd, int pkg_size, char **payload) {
 
     // Get MessageHeader.
     MessageHeader msg_header;
-    safe_read(pipe_fd, &msg_header, sizeof(MessageHeader));
+    safe_read(fd, &msg_header, sizeof(MessageHeader));
 
     // Create payload.
     *payload = (char *) malloc(msg_header.payload_bytes);
@@ -47,11 +47,11 @@ int msg_get(int pipe_fd, int pkg_size, char **payload) {
     // Get payload.
     int offset = 0;
     for (int i = 0; i < msg_header.num_packages - 1; i++) {
-        safe_read(pipe_fd, (*payload) + offset, pkg_size);
+        safe_read(fd, (*payload) + offset, pkg_size);
         offset += pkg_size;
     }
     // Last read() may read less bytes than package size.
-    safe_read(pipe_fd, (*payload) + offset, msg_header.payload_bytes - offset);
+    safe_read(fd, (*payload) + offset, msg_header.payload_bytes - offset);
 
     return msg_header.payload_bytes;
 }
