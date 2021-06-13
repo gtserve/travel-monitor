@@ -22,6 +22,7 @@ typedef struct {
     int num_th_working;
     pthread_mutex_t lock;
     pthread_cond_t  cond;
+    pthread_cond_t  idle_cond;
     TaskQueue *task_queue;
     int shutdown;
 } ThreadPool;
@@ -37,6 +38,8 @@ ThreadPool *thp_create(int num_threads, int task_capacity);
 void thp_destroy(ThreadPool **th_pool);
 
 int thp_push_task(ThreadPool *th_pool, task_func_ptr function, void *arg);
+
+void thp_block_until_done(ThreadPool *th_pool);
 
 
 #endif //SYSPRO_HW3_THPOOL_H

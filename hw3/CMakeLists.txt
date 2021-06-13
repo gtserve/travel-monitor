@@ -32,7 +32,9 @@ add_executable(
         src/skiplist.c
         src/comm_protocol.c
         src/sockets.c
-        src/thpool.c include/thpool.h)
+        src/thpool.c
+        src/task_cqueue.c
+)
 
 add_executable(
         test_thpool
@@ -44,7 +46,7 @@ add_executable(
 
 target_link_libraries(travelMonitorClient -lm)
 
-target_link_libraries(monitorServer -lm)
+target_link_libraries(monitorServer -lm -lpthread)
 
 target_link_libraries(test_thpool -lpthread)
 

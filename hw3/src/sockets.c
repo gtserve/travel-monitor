@@ -142,11 +142,14 @@ void establish_connection(ClientData *c_data) {
         printf("[CL]: Attempting connection to %s, port=%d with SOCKET_FD=%d\n",
                c_data->host->h_name, c_data->channels[i].port, c_data->channels[i].socket_fd);
 
-        if (connect(c_data->channels[i].socket_fd, c_data->server_ptrs[i],
+        while (connect(c_data->channels[i].socket_fd, c_data->server_ptrs[i],
                     sizeof(c_data->servers[i])) < 0) {
-            close(c_data->channels[i].socket_fd);
-            printf("[CL]: Connection to %s, port=%d with SOCKET_FD=%d FAILED!\n",
-                   c_data->host->h_name, c_data->channels[i].port, c_data->channels[i].socket_fd);
+
+
+//            printf("[CL]: Connection to %s, port=%d with SOCKET_FD=%d FAILED!\n",
+//                   c_data->host->h_name, c_data->channels[i].port, c_data->channels[i].socket_fd);
+
+            usleep(100);
         }
 
         printf("[CL]: Connecting to %s, port=%d with SOCKET_FD=%d\n",

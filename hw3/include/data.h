@@ -53,11 +53,13 @@ typedef struct {
 
 typedef struct {
     pthread_mutex_t lock;
-    int id;
-    int buffer_size;
     unsigned int bloom_size;
-    char in_dir_path[PATH_SIZE];
     unsigned int exp_records;
+    int id;
+    int socket_buf_size;
+    int cyclic_buf_size;
+    char in_dir_path[PATH_SIZE];
+    int num_threads;
     int num_req_total;
     int num_req_accepted;
     int num_req_rejected;

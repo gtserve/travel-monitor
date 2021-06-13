@@ -9,6 +9,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
 
 #include "../include/data.h"
 
@@ -73,24 +74,27 @@ void vir_destroy(VirusInfo **virus) {
 
 /* MonitorData */
 MonitorData *mnd_create(unsigned int bloom_size, unsigned int exp_records) {
-    MonitorData *gen_data = (MonitorData *) malloc(sizeof(MonitorData));
+    MonitorData *m_data = (MonitorData *) malloc(sizeof(MonitorData));
 
-    gen_data->bloom_size = bloom_size;
-    gen_data->exp_records = exp_records;
+    pthread_mutex_init(&(m_data->lock), NULL);
+    m_data->bloom_size = bloom_size;
+    m_data->exp_records = exp_records;
 
-    gen_data->num_req_total = 0;
-    gen_data->num_req_accepted = 0;
-    gen_data->num_req_rejected = 0;
+    m_data->num_req_total = 0;
+    m_data->num_req_accepted = 0;
+    m_data->num_req_rejected = 0;
 
-    gen_data->citizens = htb_create(exp_records);
-    gen_data->parsed_files = htb_create(EXP_COUNTRIES);
-    gen_data->countries = htb_create(EXP_COUNTRIES);
-    gen_data->viruses = htb_create(EXP_VIRUSES);
+    m_data->citizens = htb_create(exp_records);
+    m_data->parsed_files = htb_create(EXP_COUNTRIES);
+    m_data->countries = htb_create(EXP_COUNTRIES);
+    m_data->viruses = htb_create(EXP_VIRUSES);
 
-    return gen_data;
+    return m_data;
 }
 
 void mnd_destroy(MonitorData **gen_data) {
+    pthread_mutex_destroy(&((*gen_data)->lock));
+
     htb_destroy_all(&(*gen_data)->citizens, (FP_item_free) ctz_destroy);
     htb_destroy(&(*gen_data)->parsed_files, 1);
     htb_destroy_all(&(*gen_data)->countries, (FP_item_free) cnt_destroy);

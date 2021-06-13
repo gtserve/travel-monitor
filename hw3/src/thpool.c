@@ -17,7 +17,7 @@
 static void *thread_routine(void *arg) {
     ThreadPool *th_pool = (ThreadPool *) arg;
 
-    printf("Thread %d created.\n", (int) pthread_self());
+//    printf("Thread %d created.\n", (int) pthread_self());
 
     while (1) {
         pthread_mutex_lock(&(th_pool->lock));
@@ -43,12 +43,17 @@ static void *thread_routine(void *arg) {
         /* Update working counter. */
         pthread_mutex_lock(&(th_pool->lock));
         th_pool->num_th_working--;
+
+        /* Signal main thread that all threads are done working. */
+        if (th_pool->num_th_working == 0)
+            pthread_cond_signal(&(th_pool->idle_cond));
+
         pthread_mutex_unlock(&(th_pool->lock));
     }
 
     th_pool->num_th_alive--;
 
-    printf("Thread %d is about to die.\n", (int) pthread_self());
+//    printf("Thread %d is about to die.\n", (int) pthread_self());
     pthread_mutex_unlock(&(th_pool->lock));
 
     pthread_exit(NULL);
@@ -69,6 +74,7 @@ ThreadPool *thp_create(int num_threads, int task_capacity) {
 
     pthread_mutex_init(&(th_pool->lock), NULL);
     pthread_cond_init(&(th_pool->cond), NULL);
+    pthread_cond_init(&(th_pool->idle_cond), NULL);
 
     th_pool->task_queue = tsq_create(task_capacity);
 
@@ -107,6 +113,7 @@ void thp_destroy(ThreadPool **th_pool) {
     free(th_pool_ptr->threads);
     pthread_mutex_destroy(&(th_pool_ptr->lock));
     pthread_cond_destroy(&(th_pool_ptr->cond));
+    pthread_cond_destroy(&(th_pool_ptr->idle_cond));
     tsq_destroy(&(th_pool_ptr->task_queue));
 
     free(th_pool_ptr);
@@ -132,4 +139,13 @@ int thp_push_task(ThreadPool *th_pool, task_func_ptr function, void *arg) {
     pthread_mutex_unlock(&(th_pool->lock));
 
     return 0;
+}
+
+void thp_block_until_done(ThreadPool *th_pool) {
+    pthread_mutex_lock(&(th_pool->lock));
+
+    while (th_pool->num_th_working > 0)
+        pthread_cond_wait(&(th_pool->idle_cond), &(th_pool->lock));
+
+    pthread_mutex_unlock(&(th_pool->lock));
 }

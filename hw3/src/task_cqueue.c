@@ -17,6 +17,7 @@ TaskQueue *tsq_create(int capacity) {
     TaskQueue *queue = (TaskQueue *) malloc(sizeof(TaskQueue));
 
     pthread_mutex_init(&(queue->lock), NULL);
+    pthread_cond_init(&(queue->has_space), NULL);
 
     queue->capacity = capacity;
     queue->size = 0;
@@ -36,7 +37,7 @@ void tsq_destroy(TaskQueue **queue) {
     if (que_ptr->size != 0)
         perror("tsq_destroy: queue not empty");
 
-    for (int i = que_ptr->head; que_ptr->size == 0; i = (i + 1) % que_ptr->capacity) {
+    for (int i = que_ptr->head; que_ptr->size > 0; i = (i + 1) % que_ptr->capacity) {
         free(que_ptr->buffer[i]);
         que_ptr->size--;
     }
@@ -46,6 +47,9 @@ void tsq_destroy(TaskQueue **queue) {
 
     if (pthread_mutex_destroy(&(que_ptr->lock)) != 0)
         perror_exit("tsq_destroy: mutex lock destroy");
+
+    if (pthread_cond_destroy(&(que_ptr->has_space)) != 0)
+        perror_exit("tsq_destroy: cond var destroy");
 
     free(que_ptr);
     (*queue) = NULL;

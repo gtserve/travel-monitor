@@ -13,13 +13,9 @@
 #include <ctype.h>
 #include <dirent.h>
 #include <string.h>
-#include <sys/stat.h>
 #include <poll.h>
-#include <fcntl.h>
 #include <math.h>
 #include <wait.h>
-
-#include <sys/socket.h>
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <netdb.h>
@@ -163,12 +159,11 @@ int main(int argc, char **argv) {
         port++;
     }
 
-    // Wait for servers to reach accept().
-    sleep(2);
 
+    /* Establish connection with Monitors-Servers. */
     establish_connection(c_data);
 
-    // Send Directories
+    /*  Send Directories */
     DIR *in_dir;
     if (!(in_dir = opendir(p_args.input_dir))) {
         perror(p_args.input_dir);
@@ -376,6 +371,9 @@ travel_request(int citizen_id, char *date, char *country_from, char *country_to,
         SEND_DATA(SL_QUERY, (char *) &citizen_id, sizeof(int),
                   channels[m_id].writer_fd, p_args.socket_buf_size);
 
+        SEND_STR(SL_QUERY, date, channels[m_id].writer_fd,
+                 p_args.socket_buf_size);
+
         OP_CODE op_code;
         char *payload = NULL;
         char *del_ptr = NULL;
@@ -556,17 +554,18 @@ void log_file() {
         perror_exit("log file open");
     }
 
-    char str[5120] = "";
+    char str[5120] = {0};
 
     HT_Iterator *ht_iter = htb_iter_create(tm_data->all_countries);
     Country *country = NULL;
     while ((country = htb_iter_next(ht_iter)) != NULL) {
-        sprintf(str, "%s%s\n", str, country->name);
+        strcat(str, country->name);
+        strcat(str, "\n");
     }
     htb_iter_destroy(&ht_iter);
 
-    sprintf(str, "%sTOTAL TRAVEL REQUESTS %d\nACCEPTED %d\nREJECTED %d\n",
-            str, tm_data->num_req_total, tm_data->num_req_accepted, tm_data->num_req_rejected);
+    sprintf(str + strlen(str), "TOTAL TRAVEL REQUESTS %d\nACCEPTED %d\nREJECTED %d\n",
+            tm_data->num_req_total, tm_data->num_req_accepted, tm_data->num_req_rejected);
 
     fputs(str, file);
 
