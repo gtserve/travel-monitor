@@ -1,6 +1,3 @@
-# hw-syspro
-UoA, K24 System Programming - Spring Semester 2021
+# Travel Monitor
 
-- Homework 1: Vaccine Monitor
-- Homework 2: Travel Monitor
-- Homework 3: 
+A distributed tool consisted of multiple processes that takes requests from citizens who want to travel to other countries. The monitor initially parses a number of vaccination records and then depending on whether the citizens have done the right vaccines, either accepts or rejects their entry to another country.
